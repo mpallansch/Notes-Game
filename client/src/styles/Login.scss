@@ -1,0 +1,13 @@
+.page.login {
+  #username {
+    &.available {
+      border: 1px solid green;
+    }
+
+    &.unavailable {
+      border: 1px solid red;
+    }
+  }
+
+  
+}

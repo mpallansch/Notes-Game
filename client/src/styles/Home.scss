@@ -1,0 +1,59 @@
+.page.home {
+  .page-body {
+    width: 75%;
+    margin: 0 auto;
+  }
+
+  #enter-game-buttons {
+    text-align: center;
+  }
+
+  button {
+    margin: 10px 5px;
+  }
+
+  #public-game-list{
+    margin-top: 25px;
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+
+      button {
+        background: none;
+        width: 100%;
+        border-radius: 0px !important;
+        border-width: 2px;
+        padding: 10px 10px !important;
+        margin: 0;
+        border-collapse: collapse;
+
+        .game-name {
+          float: left;
+        }
+
+        .player-count {
+          float: none;
+        }
+
+        .ready-count {
+          float: right;
+        }
+      }
+    }
+
+    #page-indicator {
+      float: right;
+      margin-top: 10px;
+    }
+
+    #previous, #next {
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    #next {
+      float: right;
+    }
+  }
+}

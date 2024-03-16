@@ -1,0 +1,22 @@
+{
+  "name": "notes-game-react",
+  "version": "0.0.1",
+  "description": "Online multiplayer card game written in ReactJS and NodeJS",
+  "main": "index.js",
+  "scripts": {
+    "setup": "cd client && npm install && cd ../server && npm install && cd lib/db && node create",
+    "copyshared": "copyfiles shared/Shared.ts client/src && copyfiles shared/Shared.ts server/src && copyfiles shared/Shared.ts ai",
+    "local": "npm run copyshared && concurrently \"cd server && npm run local\" \"cd client && npm start\"",
+    "dev": "npm run copyshared && cd client && npm run dev && cd ../server && npm run dev",
+    "prod": "npm run copyshared && cd client && npm run build && copyfiles -u 1 \"build/**/*\" ../server/src/public && cd ../server && npm run prod"
+  },
+  "author": "mpallansch@adittech.com",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^6.0.0"
+  },
+  "dependencies": {
+    "copyfiles": "^2.4.1",
+    "sass": "^1.32.10"
+  }
+}

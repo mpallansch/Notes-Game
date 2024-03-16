@@ -1,0 +1,39 @@
+{
+  "name": "death-card-react-server",
+  "version": "0.0.1",
+  "description": "NodeJS server for the death-card-react project",
+  "main": "index.ts",
+  "scripts": {
+    "create-database": "cd src/db && ts-node create",
+    "clear-games": "cd src/db && ts-node clear-games",
+    "local": "nodemon --watch 'src/**/*.ts' --exec NODE_ENV=local \"ts-node\" src/index.ts",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec NODE_ENV=development \"ts-node\" src/index.ts",
+    "prod": "nodemon --watch 'src/**/*.ts' --exec NODE_ENV=production \"ts-node\" src/index.ts"
+  },
+  "author": "mpallansch@adittech.com",
+  "license": "ISC",
+  "dependencies": {
+    "@types/socket.io": "^2.1.13",
+    "body-parser": "^1.19.0",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "multer": "^1.4.2",
+    "mysql": "^2.18.1",
+    "nodemailer": "^6.5.0",
+    "socket.io": "^4.0.0",
+    "sqlite3": "^5.1.4"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.0",
+    "@types/express": "^4.17.15",
+    "@types/express-session": "^1.17.3",
+    "@types/multer": "^1.4.5",
+    "@types/mysql": "^2.15.21",
+    "@types/node": "^14.14.35",
+    "@types/nodemailer": "^6.4.1",
+    "@types/sqlite3": "^3.1.8",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4"
+  }
+}

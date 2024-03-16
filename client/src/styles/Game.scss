@@ -1,0 +1,763 @@
+$sideNavWidth: 200px;
+$sideNavTitleHeight: 50px;
+$messageDraftHeight: 100px;
+$messageSendHeight: 30px;
+$playerListSize: 20px;
+$canvasHeaderHeight: 3em;
+$canvasFooterHeight: 4em;
+
+#connection-error {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: rgb(255, 200, 200);
+  z-index: 3;
+
+  button {
+    margin: 5px 10px;
+  }
+}
+
+#side-nav {
+  z-index: 2;
+  position: absolute;
+  width: $sideNavWidth;
+  height: 100%;
+  left: 0;
+  background-image: linear-gradient(90deg, #999, #CCC);;
+  box-shadow: 5px 5px 10px gray;
+
+  h1 {    
+    height: $sideNavTitleHeight;
+    line-height: $sideNavTitleHeight;
+    margin: 0;
+    text-align: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  #player-list {
+    position: absolute;
+    top: $sideNavTitleHeight + $messageSendHeight;
+    left: 0;
+    height: calc(30% - #{$sideNavTitleHeight + $messageSendHeight});
+    width: 100%;
+    overflow-y: auto;
+
+    .player {
+      margin: 0;
+      padding: 5px;
+      border: 1px solid gray;
+      border-top: none;
+
+      &:first-child {
+        border-top: 1px solid gray;
+      }
+
+      &.disconnected {
+        opacity: 0.7;
+      }
+
+      .player-name {
+        height: 30px;
+        line-height: 30px;
+        max-width: 90px;
+        overflow: hidden;
+        display: inline-block;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+      }
+
+      .ready-indicator {
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 5px;
+        width: $playerListSize;
+        height: $playerListSize;
+        border-radius: #{$playerListSize / 2};
+        background-color: red;
+
+        &.ready {
+          background-color: green;
+        }
+      }
+
+      .kick-button {
+        float: right;
+      }
+
+      .host-indicator {
+        display: inline-block;
+        width: $playerListSize;
+        height: $playerListSize;
+        margin-left: 5px;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  #messages-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 70%;
+    width: 100%;
+
+    .actions-toggle {
+      width: 50%;
+    }
+
+    #messages {
+      position: absolute;
+      bottom: calc(#{$messageSendHeight} + #{$messageDraftHeight});
+      height: calc(100% - #{$messageSendHeight * 2} - #{$messageDraftHeight});
+      left: 0;
+      width: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 5px;
+      box-sizing: border-box;
+
+      &.actions {
+        bottom: 0;
+        height: calc(100% - 2em);
+      }
+
+      .message {
+        margin: 5px 0;
+      }
+
+      .message:first-child {
+        margin-top: auto;
+      }
+    }
+
+    #draft-message {
+      position: absolute;
+      left: 0;
+      bottom: $messageSendHeight;
+      height: $messageDraftHeight;
+      width: 100%;
+      box-sizing: border-box;
+      resize: none;
+      background-color: lightgray;
+    }
+
+    #send-message {
+      position: absolute;
+      display: inline-block;
+      bottom: 0;
+      left: 0;
+      height: $messageSendHeight;
+      width: 100%;
+    }
+  }
+
+  #leave-game {
+    position: absolute;
+    display: inline-block;
+    top: $sideNavTitleHeight;
+    left: 0;
+    height: $messageSendHeight;
+    width: 100%;
+    font-size: 14px;
+  }
+
+  #nav-toggle {
+    display: none;
+    position: absolute;
+    margin: 0;
+    top: 0;
+    right: -60px;
+    width: 60px;
+    height: 50px;
+    font-size: 22px;
+    font-weight: bold;
+    background: lightgray;
+    border: none;
+    padding: 10px;
+    border-bottom-right-radius: 5px;
+    box-shadow: 2px 2px 3px grey;
+  }
+}
+
+#game-canvas-container {
+  position: absolute;
+  width: calc(100% - #{$sideNavWidth});
+  height: 100%;
+  left: $sideNavWidth;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .canvas-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: $canvasHeaderHeight;
+    font-weight: bold;
+    text-align: center;
+    background-image: linear-gradient(45deg, #841, #A63);
+    box-shadow: 0px 0px 10px gray;
+    padding: 1em;
+    box-sizing: border-box;
+
+    span {
+      display: inline-block;
+      width: 33%;
+    }
+
+    .round-indicator {
+      float: left;
+    }
+
+    .phase-indicator {
+      float: right;
+    }
+  }
+
+  .canvas-body {
+    position: absolute;
+    left: 0;
+    top: $canvasHeaderHeight;
+    width: 100%;
+    height: calc(100% - #{$canvasHeaderHeight} - #{$canvasFooterHeight});
+
+    .game-over {
+      position: absolute;
+      text-align: center;
+      font-weight: bold;
+      top: 35%;
+      left: 0;
+      right: 0;
+
+      .winner-indicator, button {
+        display: block;
+        margin: 5px auto;
+        text-align: center;
+      }
+    }
+
+    .pick-turn {
+      position: absolute;
+      top: 25%;
+      left: 25%;
+      width: 50%;
+      height: 50%;
+      background-color: white;
+      text-align: center;
+      padding: 0.5em;
+      z-index: 2;
+      overflow-y: auto;
+
+      ul {
+        list-style-type: none;
+        padding-left: 0;
+
+        li {
+          margin: 1em;
+        }
+      }
+    }
+
+    .chair {
+      position: absolute;
+      text-align: center;
+
+      .username {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 5px;
+        border: 5px solid gray;
+        font-weight: bold;
+        text-align: center;
+
+        &.turn {
+          box-shadow: 0px 0px 5px 5px blue;
+        }
+      }
+
+      .card {
+        position: absolute;
+        display: inline-block;
+        transition: transform 0.5s linear 0s;
+        -webkit-transition: -webkit-transform 0.5s linear 0s;
+        -moz-transition: -moz-transform 0.5s linear 0s;
+        -o-transition: -o-transform 0.5s linear 0s;
+
+        .front, .back {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          transition: transform 0.5s linear 0s;
+          -webkit-transition: -webkit-transform 0.5s linear 0s;
+          -moz-transition: -moz-transform 0.5s linear 0s;
+          -o-transition: -o-transform 0.5s linear 0s;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          background-size: 100% 100%;
+        }
+
+        .front {
+          transform: rotateY(180deg);
+          -webkit-transform: rotateY(180deg);
+          -moz-transform: rotateY(180deg);
+          -o-transform: rotateY(180deg);
+
+          .circle-outer {
+            fill: gray;
+          }
+
+          .circle-inner {
+            fill: black;
+          }
+        }
+
+        &.revealed, &.owned.not-selected {
+
+          .front {
+            transform: rotateY(0deg);
+            -webkit-transform: rotateY(0deg);
+            -moz-transform: rotateY(0deg);
+            -o-transform: rotateY(0deg);
+          }
+    
+          .back {
+            transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+            -moz-transform: rotateY(180deg);
+            -o-transform: rotateY(180deg);
+          }
+
+        }
+
+        &.revealed.death {
+          box-shadow: 0px 0px 5px 5px red;
+        }
+    
+        &.selectable {
+          box-shadow: 0px 0px 5px 5px yellow;
+        }
+    
+        &.revealable {
+          box-shadow: 0px 0px 5px 5px green;
+        }
+    
+        &.selected {
+          z-index: 1;
+        }
+      }
+
+      &.player-number-0 {
+        .card .back .circle-outer, .username {
+          fill: #55A;
+          background-color: #55A;
+        }
+
+        .card .back .circle-inner, .username.point {
+          fill: #117;
+          background-color: #117;
+          color: #DDD;
+        }
+      }
+
+      &.player-number-1 {
+        .card .back .circle-outer, .username {
+          fill: #555;
+          background-color: #555;
+        }
+
+        .card .back .circle-inner, .username.point {
+          fill: #111;
+          background-color: #111;
+          color: #DDD;
+        }
+      }
+
+      &.player-number-2 {
+        .card .back .circle-outer, .username {
+          fill: #A55;
+          background-color: #A55;
+        }
+
+        .card .back .circle-inner, .username.point {
+          fill: #711;
+          background-color: #711;
+          color: #DDD;
+        }
+      }
+
+      &.player-number-3 {
+        .card .back .circle-outer, .username {
+          fill: #5A5;
+          background-color: #5A5;
+        }
+
+        .card .back .circle-inner, .username.point {
+          fill: #171;
+          background-color: #171;
+          color: #DDD;
+        }
+      }
+
+      &.player-number-4 {
+        .card .back .circle-outer, .username {
+          fill: #5AA;
+          background-color: #5AA;
+        }
+
+        .card .back .circle-inner, .username.point {
+          fill: #177;
+          background-color: #177;
+          color: #DDD;
+        }
+      }
+
+      &.player-number-5 {
+        .card .back .circle-outer, .username {
+          fill: #AA5;
+          background-color: #AA5;
+        }
+
+        .card .back .circle-inner, .username.point {
+          fill: #771;
+          background-color: #771;
+          color: #DDD;
+        }
+      }
+
+      &.player-number-6 {
+        .card .back .circle-outer, .username {
+          fill: #A5A;
+          background-color: #A5A;
+        }
+
+        .card .back .circle-inner, .username.point {
+          fill: #717;
+          background-color: #717;
+          color: #DDD;
+        }
+      }
+
+      &.player-number-7 {
+        .card .back .circle-outer, .username {
+          fill: #AAA;
+          background-color: #AAA;
+        }
+
+        .card .back .circle-inner, .username.point {
+          fill: #777;
+          background-color: #777;
+          color: #DDD;
+        }
+      }
+
+      &.north {
+        top: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        transform: rotate(180deg);
+      }
+
+      &.south {
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+      }
+
+      &.east {    
+        right: 0;
+        top: 50%;
+        transform-origin: right;
+      }
+
+      &.west {
+        left: 0;
+        top: 50%;
+        transform-origin: left;
+      }
+
+      &.north-east {
+        top: 20px;
+        transform: rotate(-135deg);
+      }
+
+      &.north-west {
+        top: 20px;
+        transform: rotate(135deg);
+      }
+
+      &.south-east {
+        bottom: 20px;
+        transform: rotate(-45deg);
+      }
+
+      &.south-west {
+        bottom: 20px;
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  .canvas-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: $canvasFooterHeight;
+    text-align: center;
+    background-image: linear-gradient(45deg, #841, #A63);
+    box-shadow: 0px 10px 10px gray;
+
+    .highest-bid-indicator {
+      text-align: left;
+      float: left;
+      font-weight: bold;
+      padding: 1em;
+
+      span {
+        display: block;
+      }
+    }
+
+    .make-bid {
+      text-align: right;
+
+      span {
+        display: inline-block;
+        margin-top: 20px;
+      }
+
+      ul {
+        display: inline-block;
+        list-style-type: none;
+        margin-top: 0;
+        padding-left: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        max-width: 30%;
+        float: right;
+
+        .bid {
+          display: inline-block;
+
+          button {
+            padding: 10px;
+            margin: 10px;
+
+            &.biddable {
+              box-shadow: 0px 0px 5px 5px yellow;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  #lobby-actions {
+    text-align: center; 
+
+    button {
+      margin: 5px 10px;
+    }
+  }
+}
+
+#svg-templates {
+  display: none;
+}
+
+$cardMargin: 8px;
+$cardSize: 73px;
+
+.chair {
+  width: calc(#{(($cardMargin * 2) + $cardSize) * 4});
+
+  .spacing {
+    height: calc(#{(($cardMargin * 2) + $cardSize)});
+  }
+
+  .username {
+    margin: #{$cardSize / 3} auto
+  }
+
+  .card {
+    top: 0;
+    left: calc(50% - #{$cardSize * 1.35});
+    width: $cardSize;
+    height: $cardSize;
+    margin: $cardMargin;
+    border-radius: $cardSize;
+    z-index: 8;
+
+    &:nth-child(2) {
+      transform: translate(#{$cardSize * .5}, 0px);
+      z-index: 7;
+    }
+    &:nth-child(3) {
+      transform: translate(#{$cardSize}, 0px);
+      z-index: 6;
+    }
+    &:nth-child(4) {
+      transform: translate(#{$cardSize * 1.5}, 0px);
+      z-index: 5;
+    }
+
+    &.selected-index-0 {
+      transform: translate(#{$cardSize * 1.5}, #{$cardSize * -1.25});
+      z-index: 1 !important;
+    }
+    &.selected-index-1 {
+      transform: translate(#{$cardSize * 1}, #{$cardSize * -1.25});
+      z-index: 2 !important;
+    }
+    &.selected-index-2 {
+      transform: translate(#{$cardSize * .5}, #{$cardSize * -1.25});
+      z-index: 3 !important;
+    }
+    &.selected-index-3 {
+      transform: translate(0, #{$cardSize * -1.5});
+      z-index: 4 !important;
+    }
+  }
+
+  &.east {    
+    transform: rotate(-90deg) translate(#{($cardSize + ($cardMargin * 2)) * 3}, #{($cardSize + ($cardMargin * 2)) * -1});
+  }
+
+  &.west {
+    transform: rotate(90deg) translate(#{($cardSize + ($cardMargin * 2)) * -3}, #{($cardSize + ($cardMargin * 2)) * -1});
+  }
+
+  &.north-east {
+    right: #{$cardSize * -1};
+  }
+
+  &.north-west {
+    left: #{$cardSize * -1};
+    
+  }
+
+  &.south-east {
+    right: #{$cardSize * -1};
+    
+  }
+
+  &.south-west {
+    left: #{$cardSize * -1};
+  }
+}
+
+@media (max-width: 900px) {
+  #side-nav {
+    left: -$sideNavWidth - 10;
+    transition: 0.25s ease-in-out transform;
+
+    #nav-toggle {
+      display: block;
+    }
+  }
+
+  #side-nav.show {
+    transform: translate($sideNavWidth + 10);
+  }
+
+  #game-canvas-container {
+    left: 0;
+    width: 100%;
+
+    .canvas-header {
+      padding-left: 50px;
+      height: 6em;
+
+      span {
+        position: absolute;
+      }
+
+      .turn-indicator {
+        width: calc(100% - 50px);
+        left: 50px;
+      }
+
+      .round-indicator {
+        left: 1em;
+      }
+
+      .phase-indicator {
+        right: 1em;
+      }
+
+      .round-indicator, .phase-indicator {
+        bottom: 1em;
+      }
+    }
+
+    .canvas-body {
+      overflow-y: auto;
+      top: 6em;
+      height: calc(100% - 6em - 6em);
+    }
+
+    .canvas-footer {
+      height: 6em;
+
+      .highest-bid-indicator {
+        width: calc(100% - 2em);
+
+        span {
+          position: absolute;
+          top: 1em;
+
+          &:nth-child(2) {
+            right: 1em;
+          }
+        }
+      }
+
+      .make-bid ul {
+        width: calc(100% - 100px);
+        max-width: initial;
+        margin-top: 0.5em;
+        text-align: left;
+      }
+    }
+
+
+    $cardMargin: 5px;
+    $cardSize: 40px;
+    
+    .chair {
+      width: calc(#{(($cardMargin * 2) + $cardSize) * 4});
+      position: relative !important;
+      transform: none !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      top: 0 !important;
+      margin: ($cardSize * 2.5) auto 0 auto !important;
+
+      .username {
+        margin: #{$cardSize / 3} auto
+      }
+
+      .card {
+        width: $cardSize;
+        height: $cardSize;
+        margin: $cardMargin;
+    
+        &.selected {
+          transform: translate(0, #{$cardSize * -1.5});
+        }
+      }
+    }
+  }
+}
