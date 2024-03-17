@@ -354,43 +354,49 @@ export default function Game() {
                 )
               })
               }
-              {gameState.phase === PHASE_SUBMITTING && <>
-                {gameState.currentTurn === currentPlayerOffset && <>
-                  Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} players to submit 
+              <div className="game-area">
+                {gameState.phase === PHASE_SUBMITTING && <>
+                  {gameState.currentTurn === currentPlayerOffset && <>
+                    Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} players to submit 
+                  </>}
+                  {gameState.currentTurn !== currentPlayerOffset && !currentChair.submitted && <>
+                    <div className="note-space">
+                      {Object.keys(cardsSelected).map((cardIndex: any) => 
+                        <button className="placed-card" style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`}}>{cardsSelected[cardIndex].text}</button>
+                      )}
+                    </div>
+                    { <div className="available-cards">
+                      {currentChair.cards.map((card: Card, cardIndex: number) => 
+                        cardsSelected[cardIndex] ? <></> : <button onClick={() => {place(cardIndex)}}>{card.text}</button>
+                      )}
+                    </div>}
+                    <button onClick={submit}>Submit</button>
+                  </>}
+                  {gameState.currentTurn !== currentPlayerOffset && currentChair.submitted && <>
+                    Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} other players
+                  </>}
                 </>}
-                {gameState.currentTurn !== currentPlayerOffset && !currentChair.submitted && <>
-                  <div className="note-space">
-                    {Object.keys(cardsSelected).map((cardIndex: any) => 
-                      <span>{cardsSelected[cardIndex].text} {cardsSelected[cardIndex].x} {cardsSelected[cardIndex].y}</span>
-                    )}
-                  </div>
-                  { <div className="available-cards">
-                    {currentChair.cards.map((card: Card, cardIndex: number) => 
-                      cardsSelected[cardIndex] ? <></> : <span onClick={() => {place(cardIndex)}}>{card.text}</span>
-                    )}
-                  </div>}
-                  <button onClick={submit}>Submit</button>
+                {gameState.phase === PHASE_SELECTING && <>
+                  {gameState.currentTurn === currentPlayerOffset && <>
+                    Your turn to select
+                  </>}
+                  {gameState.currentTurn !== currentPlayerOffset && <>
+                    Waiting on {gameState.chairs[gameState.currentTurn].username} to select a card
+                  </>}
+                  {gameState.chairs.map((chair: Chair, chairIndex: number) => 
+                    chairIndex === gameState.currentTurn ? <></> : <div className="note-space" onClick={() => {select(chairIndex)}}>
+                      Card Option
+                      {chair.cardsSubmitted?.map((card: Card) => 
+                        <button className="placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`}}>{card.text}</button>
+                      )}
+                    </div>
+                  )}
                 </>}
-                {gameState.currentTurn !== currentPlayerOffset && currentChair.submitted && <>
-                  Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} other players
-                </>}
-              </>}
-              {gameState.phase === PHASE_SELECTING && <>
-                {gameState.currentTurn === currentPlayerOffset && <>
-                  Your turn to select
-                </>}
-                {gameState.currentTurn !== currentPlayerOffset && <>
-                  Waiting on {gameState.chairs[gameState.currentTurn].username} to select a card
-                </>}
-                {gameState.chairs.map((chair: Chair, chairIndex: number) => 
-                  chairIndex === gameState.currentTurn ? <></> : <div onClick={() => {select(chairIndex)}}>
-                    Card Option
-                    {chair.cardsSubmitted?.map((card: Card) => 
-                      <span>{card.text} {card.x} {card.y}</span>
-                    )}
-                  </div>
-                )}
-              </>}
+              </div>
+            </div>
+
+            <div className="canvas-footer">
+              {gameState.prompt}
             </div>
           </div>
         }

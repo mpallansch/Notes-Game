@@ -92,6 +92,7 @@ export class GameState {
   phase: number = PHASE_SUBMITTING;
   started: boolean =  false;
   delay: boolean = false;
+  prompt: string = '';
   winner: string = '';
   latestAction: number = ACTION_SUBMIT;
   actionHistory: Array<string> = [];
@@ -132,6 +133,7 @@ export class GameState {
 
   resetRoundVariables() {
     this.phase = PHASE_SUBMITTING;
+    this.prompt = 'Your prompt is the random number: ' + (Math.random() * 2000);
 
     this.chairs.forEach((chair: Chair) => {
       chair.submitted = false;
