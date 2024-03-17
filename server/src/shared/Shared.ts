@@ -5,6 +5,7 @@ export const minPlayers = 3;
 export const maxPlayers = 8;
 export const itemsPerPage = 5;
 export const numberOfCards = 50;
+export const pointsToWin = 5;
 export const PHASE_SUBMITTING = 0;
 export const PHASE_SELECTING = 1;
 export const ACTION_SUBMIT = 0;
@@ -53,12 +54,17 @@ export class PlayerState {
 }
 export class Card {
   text: string;
-  played: boolean = false;
   x: number = 0;
   y: number = 0;
 
-  constructor(text: string){
+  constructor(text: string, x?: number, y?: number){
     this.text = text;
+    if(x){
+      this.x = x;
+    }
+    if(y){
+      this.y = y;
+    }
   }
 }
 
@@ -81,7 +87,9 @@ export class Chair {
 export class GameState {
   chairs: any = [];
 
-  phase: number = PHASE_SELECTING;
+  pointsToWin: number = pointsToWin;
+
+  phase: number = PHASE_SUBMITTING;
   started: boolean =  false;
   delay: boolean = false;
   winner: string = '';
@@ -89,7 +97,6 @@ export class GameState {
   actionHistory: Array<string> = [];
 
   currentTurn: number = 0;
-  totalTurns: number = 0;
   round: number = 1;
 
   initialize(players: Array<PlayerState>){
@@ -104,7 +111,6 @@ export class GameState {
     restrictedState.chairs.forEach((chair: Chair) => {
       if(chair.username !== username){
         delete chair.cards
-        delete chair.cardsSubmitted
       }
     });
 
@@ -126,7 +132,6 @@ export class GameState {
 
   resetRoundVariables() {
     this.phase = PHASE_SUBMITTING;
-    this.totalTurns = 0;
 
     this.chairs.forEach((chair: Chair) => {
       chair.submitted = false;
@@ -136,7 +141,6 @@ export class GameState {
   }
 
   incrementTurn(){
-    this.totalTurns++;
     this.currentTurn++;
     if(this.currentTurn >= this.chairs.length){
         this.currentTurn = 0;
@@ -204,11 +208,6 @@ export function isActionValid(state: GameState, chairIndex: number, action: numb
     return false;
   }
 
-  //Check it is this players turn
-  if(chairIndex !== state.currentTurn){
-    return false;
-  }
-
   const chair = state.chairs[chairIndex];
 
   //Validations for bid action
@@ -217,10 +216,18 @@ export function isActionValid(state: GameState, chairIndex: number, action: numb
       return false;
     }
 
+    if(chairIndex === state.currentTurn){
+      return false;
+    }
+
     // TODO add real checks here 
 
   } else if(action === ACTION_SELECT) { //Validations for select action
     if(state.phase !== PHASE_SELECTING){
+      return false;
+    }
+
+    if(chairIndex !== state.currentTurn){
       return false;
     }
 

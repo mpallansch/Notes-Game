@@ -743,6 +743,9 @@ io.on('connection', (socket: any) => {
                         state.latestAction = ACTION_SELECT;
 
                         state.chairs[params.chairIndex].points++;
+                        if(state.chairs[params.chairIndex].points === state.pointsToWin){
+                            state.winner = state.chairs[params.chairIndex].username;
+                        }
 
                         state.resetRoundVariables();
                         state.incrementTurn();

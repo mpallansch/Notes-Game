@@ -7,7 +7,7 @@ import Sounds from '../services/Sounds';
 import config from '../constants/Config';
 import constants from '../constants/Constants';
 
-import { PlayerState, GameState, Card, isActionValid, minPlayers, ACTION_SUBMIT, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING } from '../shared/Shared';
+import { PlayerState, GameState, Card, Chair, isActionValid, minPlayers, ACTION_SUBMIT, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING } from '../shared/Shared';
 
 import '../styles/Game.scss';
 
@@ -23,6 +23,7 @@ export default function Game() {
   const [ messages, _setMessages ] = useState<Array<string>>([]);
   const [ players, setPlayers ] = useState<Array<PlayerState>>([]);
   const [ currentPlayerOffset, setCurrentPlayerOffset ] = useState<number>(-1);
+  const [ cardsSelected , setCardsSelected ] = useState<any>({});
   const [ startable, setStartable ] = useState<boolean>(false);
   const [ messagesToggle, setMessagesToggle ] = useState<boolean>(true);
 
@@ -44,6 +45,7 @@ export default function Game() {
 
   const socket = socketState.socket;
   const playerState: any = players.find((p: any) => p.username === player.username);
+  const currentChair = gameState?.chairs[currentPlayerOffset];
 
   const playerStateRef = useRef();
   playerStateRef.current = playerState;
@@ -108,9 +110,20 @@ export default function Game() {
     socket.emit('begin-request');
   };
 
-  const select = (cardIndex: number) => {
-    if(gameState && isActionValid(gameState, currentPlayerOffset, ACTION_SELECT, {cardIndex})){
-      socket.emit('select', {cardIndex});
+  const place = (cardIndex: number) => {
+    const updatedCardsSelected = {...cardsSelected};
+    updatedCardsSelected[cardIndex] = new Card(currentChair.cards[cardIndex].text, Math.random() * 200, Math.random() * 200)
+    setCardsSelected(updatedCardsSelected)
+  }
+
+  const submit = () => {
+    setCardsSelected([]);
+    socket.emit('submit', {cardsSubmitted: Object.keys(cardsSelected).map((cardIndex: any) => cardsSelected[cardIndex])});
+  };
+
+  const select = (chairIndex: number) => {
+    if(gameState && isActionValid(gameState, currentPlayerOffset, ACTION_SELECT, {chairIndex})){
+      socket.emit('select', {chairIndex});
     }
   };
 
@@ -246,8 +259,6 @@ export default function Game() {
     return <div>Loading...</div>;
   }
 
-  console.log(playerState);
-  
   return (
     <div className="page">
       <div id="side-nav" className={navShow ? 'show' : ''}>
@@ -323,29 +334,63 @@ export default function Game() {
             </div>
 
             <div className="canvas-body">
-            {gameState.winner && (<div className="game-over">
-              <span className="winner-indicator">{gameState.winner} won the game!</span>
-              {!playerState.host && <p>Waiting on host to play again...</p>}
-              {playerState.host && <button type="button" onClick={restart}>Restart Game</button>}
-              {playerState.host && <button type="button" onClick={backToLobby}>Back to Lobby</button>}
-              <button type="button" onClick={leave}>Leave Game</button>
-            </div>)}
-            { gameState.chairs.map((ignored: any, chairIndex: number) => {
-              const adjustedIndex = (chairIndex + currentPlayerOffset) % gameState.chairs.length;
-              const chair = gameState.chairs[adjustedIndex];
-              const currentPlayer = chair.username === playerState.username;
-              const position = getChairPosition(currentPlayer, gameState.chairs.length, chairIndex);
+              {gameState.winner && (<div className="game-over">
+                <span className="winner-indicator">{gameState.winner} won the game!</span>
+                {!playerState.host && <p>Waiting on host to play again...</p>}
+                {playerState.host && <button type="button" onClick={restart}>Restart Game</button>}
+                {playerState.host && <button type="button" onClick={backToLobby}>Back to Lobby</button>}
+                <button type="button" onClick={leave}>Leave Game</button>
+              </div>)}
+              { gameState.chairs.map((ignored: any, chairIndex: number) => {
+                const adjustedIndex = (chairIndex + currentPlayerOffset) % gameState.chairs.length;
+                const chair = gameState.chairs[adjustedIndex];
+                const currentPlayer = chair.username === playerState.username;
+                const position = getChairPosition(currentPlayer, gameState.chairs.length, chairIndex);
 
-              return (
-                <div className={`chair ${position} player-number-${adjustedIndex}`} key={chair.username}>
-                  <p className={`username${chair.points ? ' point' : ''}${adjustedIndex === gameState.currentTurn ? ' turn' : ''}`}>{chair.username}</p>
-                </div>
-              )
-            })
-            }
-            { playerState.cards.forEach((card: Card) => {
-              <p>{card.text}</p>
-            })}
+                return (
+                  <div className={`chair ${position} player-number-${adjustedIndex}`} key={chair.username}>
+                    <p className={`username${adjustedIndex === gameState.currentTurn ? ' turn' : ''}`}>{chair.username}: {chair.points}</p>
+                  </div>
+                )
+              })
+              }
+              {gameState.phase === PHASE_SUBMITTING && <>
+                {gameState.currentTurn === currentPlayerOffset && <>
+                  Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} players to submit 
+                </>}
+                {gameState.currentTurn !== currentPlayerOffset && !currentChair.submitted && <>
+                  <div className="note-space">
+                    {Object.keys(cardsSelected).map((cardIndex: any) => 
+                      <span>{cardsSelected[cardIndex].text} {cardsSelected[cardIndex].x} {cardsSelected[cardIndex].y}</span>
+                    )}
+                  </div>
+                  { <div className="available-cards">
+                    {currentChair.cards.map((card: Card, cardIndex: number) => 
+                      cardsSelected[cardIndex] ? <></> : <span onClick={() => {place(cardIndex)}}>{card.text}</span>
+                    )}
+                  </div>}
+                  <button onClick={submit}>Submit</button>
+                </>}
+                {gameState.currentTurn !== currentPlayerOffset && currentChair.submitted && <>
+                  Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} other players
+                </>}
+              </>}
+              {gameState.phase === PHASE_SELECTING && <>
+                {gameState.currentTurn === currentPlayerOffset && <>
+                  Your turn to select
+                </>}
+                {gameState.currentTurn !== currentPlayerOffset && <>
+                  Waiting on {gameState.chairs[gameState.currentTurn].username} to select a card
+                </>}
+                {gameState.chairs.map((chair: Chair, chairIndex: number) => 
+                  chairIndex === gameState.currentTurn ? <></> : <div onClick={() => {select(chairIndex)}}>
+                    Card Option
+                    {chair.cardsSubmitted?.map((card: Card) => 
+                      <span>{card.text} {card.x} {card.y}</span>
+                    )}
+                  </div>
+                )}
+              </>}
             </div>
           </div>
         }
