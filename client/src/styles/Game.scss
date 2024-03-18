@@ -8,6 +8,10 @@ $canvasFooterHeight: 4em;
 $cardMargin: 8px;
 $cardSize: 73px;
 
+.grecaptcha-badge {
+  display: none;
+}
+
 #connection-error {
   position: fixed;
   display: flex;
@@ -545,7 +549,7 @@ $cardSize: 73px;
       left: 0 !important;
       bottom: 0 !important;
       top: 0 !important;
-      margin: ($cardSize * 2.5) auto 0 auto !important;
+      margin: 0 auto !important;
 
       .username {
         margin: #{$cardSize / 3} auto

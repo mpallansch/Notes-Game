@@ -26,10 +26,17 @@ const prompts = [
   'Write a thesis statement for a PHD in feminism',
   'What do you learn on day one of airplane pilot training',
   'Explain the joys of gardening',
-  'What\'s the most embarassing reason to go to the doctor?'
+  'What\'s the most embarassing reason to go to the doctor?',
+  'Explain to a child how giving birth works',
+  'Tell someone you\'ve clogged their toilet during a party',
+  'Ask a child in the airplane seat behind you to stop kicking',
+  'Exlaim loudly that your pants are filled with ants',
+  'Politely tell your kidnapper that you have to pee',
+  'Write a media release describing the tragedy at your local amusement park'
 ];
 
-const cardWords = ['boy','grow','neck','egg','leak','jelly','scream','slide','tiny','grab','meat','in','gnarly','neck','abscess','attempt','raw','egg','drama','tough','mad','dump','disappear','have','did','not','elaborate','chaos','booty','please','crucial','human','scenario','wonderful','ceremony','crowd','chant','drug','bender','heavy','tongue','bamboozle','toast','alter','illness','rub','cheese','on','skin','gently','press','potato','to','brain','numerous','tissue'];
+const cardWords = ['boy','grow','neck','egg','leak','jelly','scream','slide','tiny','grab','meat','in','gnarly','neck','abscess','attempt','raw','egg','drama','tough','mad','dump','disappear','have','did','not','elaborate','chaos','booty','please','crucial','human','scenario','wonderful','ceremony','crowd','chant','drug','bender','heavy','tongue','bamboozle','toast','alter','illness','rub','cheese','on','skin','gently','press','potato','to','brain','numerous','tissue',
+'plop','surprise','cadaver','cherish','boob','now','for','it','not','yet','saggy','insidious','hostile','friend','visit','crack','anguish','pause','struggle','moist','panties','anxiety','did','dump','tough','disappear','young','man','why','foot','enemy','I','suffer','hike','was','not','sexy','pantsuit','innards','has','small','poke','storm','face','to','saw','itch','absorb','when'];
 
 const validationRE: any = {
   'email': /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
