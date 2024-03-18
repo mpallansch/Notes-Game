@@ -262,11 +262,22 @@ $cardSize: 73px;
       }
 
       .note-space {
+        display: block;
         position: relative;
         margin: 2em auto;
         width: 300px;
         height: 200px;
-        background-color: gray;
+        appearance: none;
+        border: none;
+        background-color: black !important;
+      }
+
+      .card {
+        background-color: white;
+
+        &:hover {
+          color: black;
+        }
       }
 
       .available-cards {
@@ -275,7 +286,7 @@ $cardSize: 73px;
         height: 300px;
         overflow-y: scroll;
 
-        span {
+        button {
           display: inline-block;
           margin: .5em;
         }

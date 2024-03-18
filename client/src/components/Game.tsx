@@ -110,9 +110,14 @@ export default function Game() {
     socket.emit('begin-request');
   };
 
-  const place = (cardIndex: number) => {
+  const place = (cardIndex: number, x: number, y: number) => {
     const updatedCardsSelected = {...cardsSelected};
-    updatedCardsSelected[cardIndex] = new Card(currentChair.cards[cardIndex].text, Math.random() * 200, Math.random() * 200)
+    if(!updatedCardsSelected[cardIndex]){
+      updatedCardsSelected[cardIndex] = new Card(currentChair.cards[cardIndex].text, x, y)
+    } else {
+      updatedCardsSelected[cardIndex].x = x;
+      updatedCardsSelected[cardIndex].y = y;
+    }
     setCardsSelected(updatedCardsSelected)
   }
 
@@ -126,6 +131,19 @@ export default function Game() {
       socket.emit('select', {chairIndex});
     }
   };
+
+  const cardDragStart = (e: any, cardIndex: number) => {
+    e.dataTransfer.setData("text/plain", JSON.stringify({cardIndex, xOffset: e.clientX - e.target.getBoundingClientRect().x, yOffset: e.clientY - e.target.getBoundingClientRect().y}));
+  }
+
+  const cardDrop = (e: any) => {
+    const { xOffset, yOffset, cardIndex } = JSON.parse(e.dataTransfer.getData("text/plain"));
+    const noteSpace = document.querySelector('.note-space');
+    const noteBoundingRect = noteSpace?.getBoundingClientRect();
+    if(noteBoundingRect){
+      place(cardIndex, e.clientX - noteBoundingRect.x - xOffset, e.clientY - noteBoundingRect.y - yOffset);
+    }
+  }
 
   const restart = () => {
     socket.emit('restart');
@@ -360,14 +378,14 @@ export default function Game() {
                     Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} players to submit 
                   </>}
                   {gameState.currentTurn !== currentPlayerOffset && !currentChair.submitted && <>
-                    <div className="note-space">
+                    <div className="note-space" onDrop={cardDrop} onDragOver={e => e.preventDefault()} onDragEnter={e => e.preventDefault()}>
                       {Object.keys(cardsSelected).map((cardIndex: any) => 
-                        <button className="placed-card" style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`}}>{cardsSelected[cardIndex].text}</button>
+                        <button className="placed-card card" draggable="true" onDragStart={(e: any) => cardDragStart(e, cardIndex)} style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`}}>{cardsSelected[cardIndex].text}</button>
                       )}
                     </div>
                     { <div className="available-cards">
                       {currentChair.cards.map((card: Card, cardIndex: number) => 
-                        cardsSelected[cardIndex] ? <></> : <button onClick={() => {place(cardIndex)}}>{card.text}</button>
+                        cardsSelected[cardIndex] ? <></> : <button className="card" draggable="true" onDragStart={(e: any) => cardDragStart(e, cardIndex)}>{card.text}</button>
                       )}
                     </div>}
                     <button onClick={submit}>Submit</button>
@@ -384,12 +402,11 @@ export default function Game() {
                     Waiting on {gameState.chairs[gameState.currentTurn].username} to select a card
                   </>}
                   {gameState.chairs.map((chair: Chair, chairIndex: number) => 
-                    chairIndex === gameState.currentTurn ? <></> : <div className="note-space" onClick={() => {select(chairIndex)}}>
-                      Card Option
+                    chairIndex === gameState.currentTurn ? <></> : <a href="#" className="note-space" onClick={(e) => {e.preventDefault(); select(chairIndex)}}>
                       {chair.cardsSubmitted?.map((card: Card) => 
-                        <button className="placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`}}>{card.text}</button>
+                        <button className="card placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`}}>{card.text}</button>
                       )}
-                    </div>
+                    </a>
                   )}
                 </>}
               </div>
