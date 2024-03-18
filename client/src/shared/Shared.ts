@@ -98,8 +98,11 @@ export class Chair {
   constructor(username: string){
     this.username = username;
 
+    const cardsAvailable = [...cardWords];
     for(let i = 0; i < numberOfCards; i++){
-      this.cards?.push(new Card(cardWords[Math.round(Math.random() * (cardWords.length - 1))]));
+      const randomIndex = Math.round(Math.random() * (cardsAvailable.length - 1));
+      this.cards?.push(new Card(cardsAvailable[randomIndex]));
+      cardsAvailable.splice(randomIndex, 1);
     }
   }
 }
@@ -115,6 +118,7 @@ export class GameState {
   prompt: string = '';
   winner: string = '';
   latestAction: number = ACTION_SUBMIT;
+  promptHistory: Array<string> = [];
   actionHistory: Array<string> = [];
 
   currentTurn: number = 0;
@@ -153,13 +157,18 @@ export class GameState {
 
   resetRoundVariables() {
     this.phase = PHASE_SUBMITTING;
-    this.prompt = prompts[Math.round(Math.random() * (prompts.length - 1))];
+    const possiblePrompts = prompts.filter(prompt => this.promptHistory.indexOf(prompt) === -1);
+    this.prompt = possiblePrompts[Math.round(Math.random() * (possiblePrompts.length - 1))];
+    this.promptHistory.push(this.prompt)
 
     this.chairs.forEach((chair: Chair) => {
       chair.submitted = false;
       chair.cardsSubmitted = [];
+      const cardsAvailable = cardWords.filter(cardWord => (chair.cards?.filter(card => card.text === cardWord).length || 0) > 0);
       for(let i = 0; i < numberOfCards - (chair.cards?.length || 0); i++){
-        chair.cards?.push(new Card(cardWords[Math.round(Math.random() * (cardWords.length - 1))]));
+        const cardIndex = Math.round(Math.random() * (cardsAvailable.length - 1));
+        chair.cards?.push(new Card(cardWords[cardIndex]));
+        cardsAvailable.splice(cardIndex, 1);
       }
     })
   }
