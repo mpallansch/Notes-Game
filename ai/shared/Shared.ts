@@ -11,6 +11,26 @@ export const PHASE_SELECTING = 1;
 export const ACTION_SUBMIT = 0;
 export const ACTION_SELECT = 1;
 
+const prompts = [
+  'Describe a frightening medical condition',
+  'Where\'s the weirdest place you\'ve put your finger?',
+  'Make up a new holiday',
+  'Share a little known remedy for the common cold',
+  'Write a fortune cookie',
+  'Describe what a hangover feels like',
+  'Ask a restaurant host if their bathroom fan works',
+  'Describe the inside of a Chuck E. Cheese',
+  'Give a presentation about drugs to elementary school children',
+  'Why is cocaine illegal',
+  'Tell your date they look nothing like their Bubmble photo',
+  'Write a thesis statement for a PHD in feminism',
+  'What do you learn on day one of airplane pilot training',
+  'Explain the joys of gardening',
+  'What\'s the most embarassing reason to go to the doctor?'
+];
+
+const cardWords = ['boy','grow','neck','egg','leak','jelly','scream','slide','tiny','grab','meat','in','gnarly','neck','abscess','attempt','raw','egg','drama','tough','mad','dump','disappear','have','did','not','elaborate','chaos','booty','please','crucial','human','scenario','wonderful','ceremony','crowd','chant','drug','bender','heavy','tongue','bamboozle','toast','alter','illness','rub','cheese','on','skin','gently','press','potato','to','brain','numerous','tissue'];
+
 const validationRE: any = {
   'email': /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
   'password': /^(?=.*?[a-z])(?=.*?[0-9])([#?!@$%^&*-]|[a-z]|[A-Z]|[0-9]){12,}$/,
@@ -79,7 +99,7 @@ export class Chair {
     this.username = username;
 
     for(let i = 0; i < numberOfCards; i++){
-      this.cards?.push(new Card('foobar'));
+      this.cards?.push(new Card(cardWords[Math.round(Math.random() * (cardWords.length - 1))]));
     }
   }
 }
@@ -133,12 +153,14 @@ export class GameState {
 
   resetRoundVariables() {
     this.phase = PHASE_SUBMITTING;
-    this.prompt = 'Your prompt is the random number: ' + (Math.random() * 2000);
+    this.prompt = prompts[Math.round(Math.random() * (prompts.length - 1))];
 
     this.chairs.forEach((chair: Chair) => {
       chair.submitted = false;
       chair.cardsSubmitted = [];
-      /* TODO add more cards to replace ones lost, remove ones lost */
+      for(let i = 0; i < numberOfCards - (chair.cards?.length || 0); i++){
+        chair.cards?.push(new Card(cardWords[Math.round(Math.random() * (cardWords.length - 1))]));
+      }
     })
   }
 
