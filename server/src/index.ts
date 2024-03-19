@@ -695,6 +695,7 @@ io.on('connection', (socket: any) => {
             socket.on('begin-request', () => {
                 if (socket.playerStatus && socket.playerStatus.host && socket.gameMeta && !socket.gameMeta.state.started && socket.gameMeta.startable()) {
                     socket.gameMeta.state.started = true;
+                    socket.gameMeta.state.actionHistory.push('New game started!');
                     socket.gameMeta.state.actionHistory.push('Round 1');
                     socket.gameMeta.state.initialize(socket.gameMeta.playerStates);
 
@@ -709,7 +710,7 @@ io.on('connection', (socket: any) => {
                     const state = socket.gameMeta.state;
 
                     if (isActionValid(state, socket.chairIndex, ACTION_SUBMIT, params)) {
-                        // TODO add to action history  state.actionHistory.push(`${state.chairs[socket.chairIndex].username} ${params.value === 'pass' ? 'passed' : `bid ${params.value}`}`);
+                        state.actionHistory.push(`${state.chairs[socket.chairIndex].username} has submitted their response`);
                         
                         const chair = state.chairs[socket.chairIndex];
 
@@ -739,12 +740,13 @@ io.on('connection', (socket: any) => {
                     const state = socket.gameMeta.state;
 
                     if (isActionValid(state, socket.chairIndex, ACTION_SELECT, params)) {
-                        // TODO add to action history  state.actionHistory.push(`${state.chairs[socket.chairIndex].username} played a card`);
                         state.latestAction = ACTION_SELECT;
 
                         state.chairs[params.chairIndex].points++;
+                        state.actionHistory.push(`${state.chairs[socket.chairIndex].username} has picked ${state.chairs[params.chairIndex].username}'s response! They now have ${state.chairs[params.chairIndex].points} points`);
                         if(state.chairs[params.chairIndex].points === state.pointsToWin){
                             state.winner = state.chairs[params.chairIndex].username;
+                            state.actionHistory.push(`${state.chairs[params.chairIndex].username} has won the game!`);
                         }
 
                         state.resetRoundVariables();
