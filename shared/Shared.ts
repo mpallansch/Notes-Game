@@ -135,6 +135,9 @@ export class GameState {
     players.forEach((player) => {
       this.chairs.push(new Chair(player.username));
     });
+
+    this.prompt = prompts[Math.round(Math.random() * (prompts.length - 1))];
+    this.promptHistory.push(this.prompt)
   }
 
   getRestrictedState(username: string) {
