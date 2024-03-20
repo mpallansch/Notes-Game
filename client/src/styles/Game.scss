@@ -242,8 +242,12 @@ $cardSize: 73px;
       text-align: center;
       font-weight: bold;
       top: 35%;
-      left: 0;
+      width: 50%;
+      left: 25%;
       right: 0;
+      background-color: white;
+      padding: 2em;
+      border-radius: 1em;
 
       .winner-indicator, button {
         display: block;
