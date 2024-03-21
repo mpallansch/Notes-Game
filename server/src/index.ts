@@ -1,5 +1,5 @@
 import express from 'express';
-import session, { SessionOptions } from 'express-session';
+import session from 'cookie-session';
 import bodyParser from 'body-parser';
 import multer from 'multer';
 import sqlite3 from 'sqlite3';
@@ -237,7 +237,7 @@ const io = new Server(httpServer, {
     }
 });
 
-const sessionConfig: SessionOptions = {
+const sessionConfig: any = {
     secret: config.sessionSecret!,
     cookie: {}
 }
