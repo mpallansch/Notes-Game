@@ -20,6 +20,7 @@ export default function Login() {
   const { setPlayer } = useContext<any>(Context);
 
   const [ userInfo, setUserInfo ] = useState<any>({});
+  const [ loginMode, setLoginMode ] = useState<string>('');
   const [ registerMode, setRegisterMode ] = useState<boolean>(false);
   const [ usernameAvailability, setUsernameAvailability ] = useState<string>('');
   const [ errorMessage, setErrorMessage ] = useState<string>('');
@@ -66,7 +67,7 @@ export default function Login() {
           .then((token: any) => {
             data.append('g-recaptcha-response', token);
 
-            API.request(registerMode ? 'register' : 'login', {
+            API.request(loginMode === 'guest' ? 'play-as-guest' : (registerMode ? 'register' : 'login'), {
               method: 'POST',
               body: data}).then((response: PlayerInfo) => {
                 setPlayer(response);
@@ -128,44 +129,56 @@ export default function Login() {
   return (
     <div className="page login vertically-centered">
       <h1>Ransom Notes</h1>
-      <form onSubmit={submit}>
-        <fieldset>
-          <label htmlFor="email"><strong>Email: </strong></label>
-          <input id="email" type="text" onChange={change} autoComplete="on" />
-        </fieldset>
+      {!loginMode && <>
+        <button onClick={() => setLoginMode('guest')}>Play as guest</button>
+        <button onClick={() => setLoginMode('login')}>Login</button>
+      </>}
+      {loginMode && 
+        <form onSubmit={submit}>
+          {loginMode === 'login' && <fieldset>
+            <label htmlFor="email"><strong>Email: </strong></label>
+            <input id="email" type="text" onChange={change} autoComplete="on" />
+          </fieldset>}
 
-        {registerMode && (
-          <fieldset>
-            <label htmlFor="username"><strong>Username: </strong></label>
-            <input id="username" type="text" onChange={change} autoComplete="on" className={usernameAvailability} /> <button type="button" onClick={checkAvailability}>Check Availability</button>
-          </fieldset>
-        )}
+          {(loginMode !== 'login' || registerMode) && (
+            <fieldset>
+              <label htmlFor="username"><strong>Username: </strong></label>
+              <input id="username" type="text" onChange={change} autoComplete="on" className={usernameAvailability} /> {loginMode === 'login' && <button type="button" onClick={checkAvailability}>Check Availability</button>}
+            </fieldset>
+          )}
 
-        <fieldset>
-          <label htmlFor="password"><strong>Password: </strong></label>
-          <input id="password" type="password" onChange={change} autoComplete="off" />
-        </fieldset>
+          {loginMode === 'login' && <fieldset>
+            <label htmlFor="password"><strong>Password: </strong></label>
+            <input id="password" type="password" onChange={change} autoComplete="off" />
+          </fieldset>}
 
-        {registerMode && (
-          <fieldset>
-            <label htmlFor="confirm"><strong>Confirm Password: </strong></label>
-            <input id="confirm" type="password" onChange={change} autoComplete="off" />
-          </fieldset>
-        )}
+          {loginMode === 'login' && registerMode && (
+            <fieldset>
+              <label htmlFor="confirm"><strong>Confirm Password: </strong></label>
+              <input id="confirm" type="password" onChange={change} autoComplete="off" />
+            </fieldset>
+          )}
 
-        <br/><br/>
+          <br/><br/>
 
-        {!registerMode && <span>Don't have an account? <button type="button" onClick={() => {setRegisterMode(true)}}>Register now</button></span>}
-        {registerMode && <span>Already have an account? <button type="button" onClick={() => {setRegisterMode(false)}}>Login</button></span>}
+          {loginMode === 'login' && !registerMode && <span>Don't have an account? <button type="button" onClick={() => {setRegisterMode(true)}}>Register now</button></span>}
+          {loginMode === 'login' && registerMode && <span>Already have an account? <button type="button" onClick={() => {setRegisterMode(false)}}>Login</button></span>}
+          
+          <br/><br/><br/>
 
-        <br/><br/><br/>
+          {loginMode === 'login' && <button type="button" onClick={forgotPassword}>Forgot password?</button>}
 
-        <button type="button" onClick={forgotPassword}>Forgot password?</button>
+          
+          <br/><br/>
 
-        <br/><br/><br/>
+          {loginMode === 'login' && <button onClick={() => setLoginMode('guest')}>Play as guest</button>}
+          {loginMode === 'guest' && <button onClick={() => setLoginMode('login')}>Back to login</button>}
 
-        <input type="submit" value="Submit" />
-      </form>
+          <br/><br/><br/>
+
+          <input type="submit" value="Submit" />
+        </form>
+      }
 
       <div className="error-message">
         <p>{errorMessage}</p>

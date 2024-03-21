@@ -19,7 +19,7 @@ import e from 'express';
 //let mysql = require('mysql');
 
 // Defines global variables
-const apiWhitelist = ['/login', '/register', '/check-login', '/forgot-password', '/reset-password', '/check-username-availability']; //API calls that aren't protected by session authentication
+const apiWhitelist = ['/login', '/register', '/check-login', '/forgot-password', '/reset-password', '/check-username-availability', '/play-as-guest']; //API calls that aren't protected by session authentication
 let socketClients: any = {};
 let gameMetas: any = {};
 let playersInGame: any = {};
@@ -402,6 +402,11 @@ app.post('/register', (req: any, res: any) => {
         register();
     }
 });
+
+app.post('/play-as-guest', (req: any, res: any) => {
+    req.session.playerInfo = new PlayerInfo(req.body.username, 'Guest');
+    res.send({ error: false, data: req.session.playerInfo });
+})
 
 // Used by the client to login with username and password
 app.post('/login', (req: any, res: any) => {
