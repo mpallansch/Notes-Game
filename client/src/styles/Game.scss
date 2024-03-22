@@ -284,6 +284,13 @@ $cardSize: 73px;
 
       .card {
         background-color: white;
+        touch-action: none;
+
+        &.dragging {
+          position: fixed;
+          top: 0;
+          left: 0;
+        }
 
         &:hover {
           color: black;

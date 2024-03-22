@@ -145,6 +145,37 @@ export default function Game() {
     }
   }
 
+  function cardTouchStart(e: any) {
+    e.target.setAttribute('data-x', e.changedTouches[0].clientX - e.target.getBoundingClientRect().x);
+    e.target.setAttribute('data-y', e.changedTouches[0].clientY - e.target.getBoundingClientRect().y);
+    e.target.style.transform = `translate(${e.target.getBoundingClientRect().x}px, ${e.target.getBoundingClientRect().y}px)`;
+    if(e.target.className.indexOf('dragging') === -1){
+      e.target.className = e.target.className + ' dragging';
+    }
+  }
+
+  function cardTouchMove(e: any) {
+    e.target.style.transform = `translate(${e.changedTouches[0].clientX - parseInt(e.target.getAttribute('data-x'))}px, ${e.changedTouches[0].clientY - parseInt(e.target.getAttribute('data-y'))}px)`;
+  }
+
+  function cardTouchEnd(e: any, cardIndex: number) {
+    const noteSpace = document.querySelector('.note-space');
+    const noteBoundingRect = noteSpace?.getBoundingClientRect();
+    if(noteBoundingRect){
+      const x = e.changedTouches[0].clientX - noteBoundingRect.x - parseInt(e.target.getAttribute('data-x'));
+      const y = e.changedTouches[0].clientY - noteBoundingRect.y - parseInt(e.target.getAttribute('data-y'));
+      if(x > -5 && x < 305 && y > -5 && y < 205){ 
+        place(cardIndex, x, y);
+        e.target.className = e.target.className.replace(' dragging', '');
+        e.target.className = e.target.className.replace('dragging', '');
+      } else {
+        e.target.className = e.target.className.replace(' dragging', '');
+        e.target.className = e.target.className.replace('dragging', '');
+        e.target.style.transform = '';
+      }
+    }
+  }
+
   const restart = () => {
     socket.emit('restart');
   }
@@ -380,12 +411,12 @@ export default function Game() {
                   {gameState.currentTurn !== currentPlayerOffset && !currentChair.submitted && <>
                     <div className="note-space" onDrop={cardDrop} onDragOver={e => e.preventDefault()} onDragEnter={e => e.preventDefault()}>
                       {Object.keys(cardsSelected).map((cardIndex: any) => 
-                        <button className="placed-card card" draggable="true" onDragStart={(e: any) => cardDragStart(e, cardIndex)} style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`}}>{cardsSelected[cardIndex].text}</button>
+                        <button className="placed-card card" draggable="true" onTouchStart={cardTouchStart} onTouchMove={cardTouchMove} onTouchEnd={e => cardTouchEnd(e, cardIndex)} onDragStart={(e: any) => cardDragStart(e, cardIndex)} style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`}}>{cardsSelected[cardIndex].text}</button>
                       )}
                     </div>
                     { <div className="available-cards">
                       {currentChair.cards.map((card: Card, cardIndex: number) => 
-                        cardsSelected[cardIndex] ? <></> : <button className="card" draggable="true" onDragStart={(e: any) => cardDragStart(e, cardIndex)}>{card.text}</button>
+                        cardsSelected[cardIndex] ? <></> : <button className="card" draggable="true" onTouchStart={cardTouchStart} onTouchMove={cardTouchMove} onTouchEnd={e => cardTouchEnd(e, cardIndex)} onDragStart={(e: any) => cardDragStart(e, cardIndex)}>{card.text}</button>
                       )}
                     </div>}
                     <button onClick={submit}>Submit</button>
