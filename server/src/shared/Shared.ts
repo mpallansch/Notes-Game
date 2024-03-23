@@ -32,11 +32,23 @@ const prompts = [
   'Ask a child in the airplane seat behind you to stop kicking',
   'Exlaim loudly that your pants are filled with ants',
   'Politely tell your kidnapper that you have to pee',
-  'Write a media release describing the tragedy at your local amusement park'
+  'Write a media release describing the tragedy at your local amusement park',
+  'As a teacher, tell a friend about your favorite student',
+  'Write a horoscope for the current player whose turn it is',
+  'Write an 11th commandment',
+  'What was the creepiest part of Charlie and the Chocolate Factory?',
+  'What happens in your favorite disney movie?',
+  'Describe the final loyalty test you must pass to join a cult',
+  'What got you a lifetime ban from Applebee\'s?',
+  'What\'s the number one cause of divorce in America?',
+  'Write an inspiration quote that a 19 year old white girl would get tattooed',
+  'Explain why you got fired from your last job',
+  'Explain to a cow why you have to kill them to make hamburgers',
+  'What\'s the biggest lie you\'ve ever told?',
+  'What\'s the worst part of camping?'
 ];
 
-const cardWords = ['boy','grow','neck','egg','leak','jelly','scream','slide','tiny','grab','meat','in','gnarly','neck','abscess','attempt','raw','egg','drama','tough','mad','dump','disappear','have','did','not','elaborate','chaos','booty','please','crucial','human','scenario','wonderful','ceremony','crowd','chant','drug','bender','heavy','tongue','bamboozle','toast','alter','illness','rub','cheese','on','skin','gently','press','potato','to','brain','numerous','tissue',
-'plop','surprise','cadaver','cherish','boob','now','for','it','not','yet','saggy','insidious','hostile','friend','visit','crack','anguish','pause','struggle','moist','panties','anxiety','did','dump','tough','disappear','young','man','why','foot','enemy','I','suffer','hike','was','not','sexy','pantsuit','innards','has','small','poke','storm','face','to','saw','itch','absorb','when'];
+const cardWords = ['boy','girl','grow','shrink','neck','egg','leak','jelly','scream','slide','tiny','grab','meat','in','gnarly','neck','abscess','attempt','raw','egg','drama','tough','mad','dump','disappear','have','did','not','elaborate','chaos','booty','please','crucial','human','scenario','wonderful','ceremony','crowd','chant','drug','bender','heavy','tongue','bamboozle','toast','alter','illness','rub','cheese','on','skin','gently','press','potato','to','brain','numerous','tissue','plop','surprise','cadaver','cherish','boob','now','for','it','not','yet','saggy','insidious','hostile','friend','visit','crack','anguish','pause','struggle','moist','panties','anxiety','did','dump','tough','disappear','young','man','why','foot','enemy','I','suffer','hike','was','not','sexy','pantsuit','innards','has','small','poke','storm','face','to','saw','itch','absorb','when','young','jerk','with','creep','y','wink','unlikely','vegetable','high','damage','princess','hundred','pray','so','pop','float','question','inquiry','too','in','walk','hunt','float','area','smooth','surge','i\'d','betrayal','behind','head','crisis','soul','like','fix','up','cure','when','also','rock','think','if','bitchy','whip','asset','argue','not','woman','do','basic','doubt','work','kingdom','devil','money','bite','hurt','lucky','mind','test','do','shark','mushroom','party','cam','mat','blake','joe','moon','carl','mush','kelp','fly','torment','space','attain','not','woman','why','despise','ly','miss','amazing','night','then','arrest','juicy','crash','strategy','flesh','flap','jam','your','those','strive','keep','blow','eat','see','cry','baby','school','slight','prize','price','climb','pink','cruel','chocolate','daddy','commotion','challenge','we','saw','juicy','rotten','alien','too','average','dangerous','crunch','elaborate','thunder','flame','poop','poke','UFO']
 
 const validationRE: any = {
   'email': /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
