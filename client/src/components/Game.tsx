@@ -177,7 +177,9 @@ export default function Game() {
     if(noteBoundingRect){
       const x = e.changedTouches[0].clientX - noteBoundingRect.x - parseInt(e.target.getAttribute('data-x'));
       const y = e.changedTouches[0].clientY - noteBoundingRect.y - parseInt(e.target.getAttribute('data-y'));
-      if(x > -5 && x < 305 && y > -5 && y < 205){ 
+      const xAdjusted = x + (e.target.getBoundingClientRect().width / 2);
+      const yAdjusted = y + (e.target.getBoundingClientRect().height / 2);
+      if(xAdjusted > -5 && xAdjusted < 305 && yAdjusted > -5 && yAdjusted < 205){ 
         place(cardIndex, x, y);
         e.target.className = e.target.className.replace(' dragging', '');
         e.target.className = e.target.className.replace('dragging', '');
