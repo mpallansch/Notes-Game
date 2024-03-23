@@ -121,6 +121,14 @@ export default function Game() {
     setCardsSelected(updatedCardsSelected)
   }
 
+  const remove = (cardIndex: number) => {
+    if(cardsSelected[cardIndex]){
+      const updatedCardsSelected = {...cardsSelected};
+      delete updatedCardsSelected[cardIndex];
+      setCardsSelected(updatedCardsSelected);
+    }
+  }
+
   const submit = () => {
     setCardsSelected([]);
     socket.emit('submit', {cardsSubmitted: Object.keys(cardsSelected).map((cardIndex: any) => cardsSelected[cardIndex])});
@@ -143,6 +151,11 @@ export default function Game() {
     if(noteBoundingRect){
       place(cardIndex, e.clientX - noteBoundingRect.x - xOffset, e.clientY - noteBoundingRect.y - yOffset);
     }
+  }
+
+  const cardRemove = (e: any) => {
+    const { cardIndex } = JSON.parse(e.dataTransfer.getData("text/plain"));
+    remove(cardIndex);
   }
 
   function cardTouchStart(e: any) {
@@ -169,6 +182,7 @@ export default function Game() {
         e.target.className = e.target.className.replace(' dragging', '');
         e.target.className = e.target.className.replace('dragging', '');
       } else {
+        remove(cardIndex);
         e.target.className = e.target.className.replace(' dragging', '');
         e.target.className = e.target.className.replace('dragging', '');
         e.target.style.transform = '';
@@ -414,7 +428,7 @@ export default function Game() {
                         <button className="placed-card card" draggable="true" onTouchStart={cardTouchStart} onTouchMove={cardTouchMove} onTouchEnd={e => cardTouchEnd(e, cardIndex)} onDragStart={(e: any) => cardDragStart(e, cardIndex)} style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`}}>{cardsSelected[cardIndex].text}</button>
                       )}
                     </div>
-                    { <div className="available-cards">
+                    { <div className="available-cards" onDrop={cardRemove} onDragOver={e => e.preventDefault()} onDragEnter={e => e.preventDefault()}>
                       {currentChair.cards.map((card: Card, cardIndex: number) => 
                         cardsSelected[cardIndex] ? <></> : <button className="card" draggable="true" onTouchStart={cardTouchStart} onTouchMove={cardTouchMove} onTouchEnd={e => cardTouchEnd(e, cardIndex)} onDragStart={(e: any) => cardDragStart(e, cardIndex)}>{card.text}</button>
                       )}
