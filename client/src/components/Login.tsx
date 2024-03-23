@@ -131,6 +131,7 @@ export default function Login() {
       <h1>Ransom Notes</h1>
       {!loginMode && <>
         <button onClick={() => setLoginMode('guest')}>Play as guest</button>
+        <br/>
         <button onClick={() => setLoginMode('login')}>Login</button>
       </>}
       {loginMode && 
@@ -171,8 +172,8 @@ export default function Login() {
           
           <br/><br/>
 
-          {loginMode === 'login' && <button onClick={() => setLoginMode('guest')}>Play as guest</button>}
-          {loginMode === 'guest' && <button onClick={() => setLoginMode('login')}>Back to login</button>}
+          {loginMode === 'login' && <button type="button" onClick={() => setLoginMode('guest')}>Play as guest</button>}
+          {loginMode === 'guest' && <button type="button" onClick={() => setLoginMode('login')}>Back to login</button>}
 
           <br/><br/><br/>
 
