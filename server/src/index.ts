@@ -170,6 +170,11 @@ const addGameMeta = (gameId: string, gameMeta: GameMeta, isPublic: string) => {
 const removeGameMeta = (gameId: string, publicQueueOnly: boolean = false) => {
     if(!publicQueueOnly){
         delete gameMetas[gameId];
+        Object.keys(playersInGame).forEach(playerId => {
+            if(playersInGame[playerId] === gameId){
+                delete playersInGame[playerId];
+            }
+        })
         db.run('DELETE FROM GameMetas WHERE GameId = ?', [gameId], (err) => {
             if(err){
                 console.log('Error removing GameMeta', gameId);
