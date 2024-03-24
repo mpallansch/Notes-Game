@@ -409,7 +409,7 @@ app.post('/register', (req: any, res: any) => {
 });
 
 app.post('/play-as-guest', (req: any, res: any) => {
-    req.session.playerInfo = new PlayerInfo(req.body.username, 'Guest');
+    req.session.playerInfo = new PlayerInfo(req.body.username, 'Guest', playersInGame[req.body.username]);
     res.send({ error: false, data: req.session.playerInfo });
 })
 
@@ -421,7 +421,6 @@ app.post('/login', (req: any, res: any) => {
     }
 
     const login = () => {
-        //db.query('SELECT * FROM Users WHERE EmailAddress = ?', [req.body.email], (err, row) => {
         db.get('SELECT * FROM Users WHERE EmailAddress = ?', [req.body.email], (err, row) => {
             if (err) {
                 res.send({ error: true, message: 'Error accessing database.' });
