@@ -300,6 +300,7 @@ $cardSize: 73px;
       .available-cards {
         margin: 1em auto 2em auto;
         width: 300px;
+        min-height: 300px;
         height: calc(100% - 300px - 2em);
         overflow-y: scroll;
 
