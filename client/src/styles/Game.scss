@@ -303,6 +303,7 @@ $cardSize: 73px;
         min-height: 300px;
         height: calc(100% - 300px - 2em);
         overflow-y: scroll;
+        box-sizing: border-box;
 
         button {
           display: inline-block;
@@ -311,7 +312,7 @@ $cardSize: 73px;
 
         &::-webkit-scrollbar {
           -webkit-appearance: none;
-          width: 7px;
+          width: 21px;
         }
         
         &::-webkit-scrollbar-thumb {
@@ -558,8 +559,20 @@ $cardSize: 73px;
       top: 6em;
       height: calc(100% - 6em - 6em);
 
-      .game-area .note-space {
-        margin: 0 auto 2em auto;
+      .game-area {
+        height: 100%;
+
+        .note-space {
+          margin: 0 auto .5em auto;
+        }
+
+        .available-cards {
+          margin: 0 auto 1em auto;
+          padding-right: 3em;
+          width: 300px;
+          min-height: auto;
+          height: calc(100% - 200px - 3.5em);
+        }
       }
     }
 
@@ -572,17 +585,7 @@ $cardSize: 73px;
     $cardSize: 40px;
     
     .chair {
-      width: calc(#{(($cardMargin * 2) + $cardSize) * 4});
-      position: relative !important;
-      transform: none !important;
-      left: 0 !important;
-      bottom: 0 !important;
-      top: 0 !important;
-      margin: 0 auto !important;
-
-      .username {
-        margin: #{$cardSize / 3} auto
-      }
+      display: none;
     }
   }
 }
