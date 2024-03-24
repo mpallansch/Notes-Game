@@ -207,6 +207,12 @@ export default function Game() {
     navigate('/home');
   };
 
+  const getChairScore = (username: string) => {
+    const chair: any = gameState?.chairs.find((chair: any) => chair.username === username);
+    if(chair) return chair.points;
+    return 0;
+  };
+
   useEffect(() => {
     connectSocket();
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
@@ -335,6 +341,7 @@ export default function Game() {
           {players.map((playerInList: any) => (
             <p className={`player ${!playerInList.connected ? 'disconnected' : ''}`} key={playerInList.username}>
               <span className={`ready-indicator ${playerInList.ready ? 'ready' : ''}`}></span>
+              <span className="player-score">{getChairScore(playerInList.username)}</span>
               <span className="player-name">
                 {playerInList.username}
               </span>
