@@ -7,7 +7,7 @@ import Sounds from '../services/Sounds';
 import config from '../constants/Config';
 import constants from '../constants/Constants';
 
-import { PlayerState, GameState, Card, Chair, isActionValid, minPlayers, ACTION_SUBMIT, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING } from '../shared/Shared';
+import { PlayerState, GameState, Card, Chair, Answer, isActionValid, minPlayers, ACTION_SUBMIT, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING } from '../shared/Shared';
 
 import '../styles/Game.scss';
 
@@ -455,13 +455,14 @@ export default function Game() {
                   {gameState.currentTurn !== currentPlayerOffset && <>
                     Waiting on {gameState.chairs[gameState.currentTurn].username} to select a card
                   </>}
-                  {gameState.chairs.map((chair: Chair, chairIndex: number) => 
-                    chairIndex === gameState.currentTurn ? <></> : <a href="#" className="note-space" onClick={(e) => {e.preventDefault(); select(chairIndex)}}>
-                      {chair.cardsSubmitted?.map((card: Card) => 
+
+                  {gameState.answersSubmitted.map((answer: Answer) => (
+                    <a href="#" className="note-space" onClick={(e) => {e.preventDefault(); select(answer.chairIndex)}}>
+                      {answer.cardsSubmitted.map((card: Card) => 
                         <button className="card placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`}}>{card.text}</button>
                       )}
                     </a>
-                  )}
+                  ))}
                 </>}
               </div>
             </div>

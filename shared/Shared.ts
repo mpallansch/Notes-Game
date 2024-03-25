@@ -53,7 +53,7 @@ const prompts = [
   'Describe the Olympics',
   'Draft an instruction manual for toilet paper',
   'Describe your current level of fitness to your new personal trainer',
-  'Write the wanring label for a new Viagra alternative',
+  'Write the warning label for a new Viagra alternative',
   'Write an ad from the 1940\'s selling cigarettes to middle schoolers',
   'Tell your Tinder date that you have rabies',
   'Write an excuse for driving 125mph in a school zone'
@@ -118,6 +118,16 @@ export class Card {
   }
 }
 
+export class Answer {
+  chairIndex: number;
+  cardsSubmitted: Array<Card> = [];
+
+  constructor(chairIndex: number, cardsSubmitted: Array<Card>){
+    this.chairIndex = chairIndex;
+    this.cardsSubmitted = cardsSubmitted;
+  }
+}
+
 export class Chair {
   username: string;
   cards?: Array<Card> = [];
@@ -150,6 +160,7 @@ export class GameState {
   latestAction: number = ACTION_SUBMIT;
   promptHistory: Array<string> = [];
   actionHistory: Array<string> = [];
+  answersSubmitted: Array<Answer> = [];
 
   currentTurn: number = 0;
   round: number = 1;
@@ -163,14 +174,31 @@ export class GameState {
     this.promptHistory.push(this.prompt)
   }
 
-  getRestrictedState(username: string) {
-    let restrictedState: GameState = JSON.parse(JSON.stringify(this));
+  shuffleArray(array: any) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
 
-    restrictedState.chairs.forEach((chair: Chair) => {
+  getRestrictedState(username: string) {
+    const restrictedState: GameState = JSON.parse(JSON.stringify(this));
+
+    restrictedState.answersSubmitted = [];
+
+    restrictedState.chairs.forEach((chair: Chair, chairIndex: number) => {
+      if(this.currentTurn !== chairIndex && chair.cardsSubmitted){
+        restrictedState.answersSubmitted.push(new Answer(chairIndex, chair.cardsSubmitted));
+      }
       if(chair.username !== username){
-        delete chair.cards
+        delete chair.cards;
+        delete chair.cardsSubmitted;
       }
     });
+
+    this.shuffleArray(restrictedState.answersSubmitted);
 
     return restrictedState;
   }

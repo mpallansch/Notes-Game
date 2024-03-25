@@ -22,7 +22,7 @@ const prompts = [
   'Describe the inside of a Chuck E. Cheese',
   'Give a presentation about drugs to elementary school children',
   'Why is cocaine illegal',
-  'Tell your date they look nothing like their Bubmble photo',
+  'Tell your date they look nothing like their Bumble photo',
   'Write a thesis statement for a PHD in feminism',
   'What do you learn on day one of airplane pilot training',
   'Explain the joys of gardening',
@@ -53,9 +53,10 @@ const prompts = [
   'Describe the Olympics',
   'Draft an instruction manual for toilet paper',
   'Describe your current level of fitness to your new personal trainer',
-  'Write the wanring label for a new Viagra alternative',
+  'Write the warning label for a new Viagra alternative',
   'Write an ad from the 1940\'s selling cigarettes to middle schoolers',
-  'Tell your Tinder date that you have rabies'
+  'Tell your Tinder date that you have rabies',
+  'Write an excuse for driving 125mph in a school zone'
 ];
 
 const cardWords = ['nibble','flesh','bomb','bare','area','challenge','swap','hundred','fish','wound','relish','weenie','hunt','woman','fantasy','boy','girl','grow','shrink','neck','egg','leak','jelly','scream','slide','tiny','grab','meat','in','gnarly','abscess','attempt','raw','drama','tough','mad','dump','disappear','have','did','not','elaborate','chaos','booty','please','crucial','human','scenario','wonderful','ceremony','crowd','chant','drug','bender','heavy','tongue','bamboozle','toast','alter','illness','rub','cheese','on','skin','gently','press','potato','to','brain','numerous','tissue','plop','surprise','cadaver','cherish','boob','now','for','it','yet','saggy','insidious','hostile','friend','visit','crack','anguish','pause','struggle','moist','panties','anxiety','young','man','why','foot','enemy','I','suffer','hike','was','sexy','pantsuit','innards','has','small','poke','storm','face','saw','itch','absorb','when','jerk','with','creep','y','wink','unlikely','vegetable','high','damage','princess','pray','so','pop','float','question','inquiry','too','walk','smooth','surge','i\'d','betrayal','behind','head','crisis','soul','like','fix','up','cure','also','rock','think','if','bitchy','whip','asset','argue','do','basic','doubt','work','kingdom','devil','money','bite','hurt','lucky','mind','test','shark','mushroom','party','cam','mat','blake','joe','moon','carl','mush','kelp','fly','torment','space','attain','despise','ly','miss','amazing','night','then','arrest','juicy','crash','strategy','flap','jam','your','those','strive','keep','blow','eat','see','cry','baby','school','slight','prize','price','climb','pink','cruel','chocolate','daddy','commotion','we','rotten','alien','average','dangerous','crunch','thunder','flame','poop','UFO','wife','belief','her','shirt','seem','good','study','more','firm','genital','can','delight','go','s','wish','but','?','record','no','happy','ooze','pump','seduce','curious','stroke','him','filth','sack','yummy','dance','listen','finger','duck','day','nose','nail','animal','assassin','at','large','my','organic','murder','bag','a','travel','catch','his','ass','warrior','around','some','old','stink','shelter','because','crave','adventure','say','any','noise','darkness','she','cute','batter','attack','assault','us','terrify','love','bowel','anatomy','cake','amount','damp','hero','object','foul','bank','chocolates','squirt','evolve','excuse','burn','blunder','abuse','search','fester','laser','conflict','stomach','after','pad','ed','wave','grate','hey','peel','hammer','already','apply','place','blame','plug','bone','big','TV','agoraphobia']
@@ -117,6 +118,16 @@ export class Card {
   }
 }
 
+export class Answer {
+  chairIndex: number;
+  cardsSubmitted: Array<Card> = [];
+
+  constructor(chairIndex: number, cardsSubmitted: Array<Card>){
+    this.chairIndex = chairIndex;
+    this.cardsSubmitted = cardsSubmitted;
+  }
+}
+
 export class Chair {
   username: string;
   cards?: Array<Card> = [];
@@ -149,6 +160,7 @@ export class GameState {
   latestAction: number = ACTION_SUBMIT;
   promptHistory: Array<string> = [];
   actionHistory: Array<string> = [];
+  answersSubmitted: Array<Answer> = [];
 
   currentTurn: number = 0;
   round: number = 1;
@@ -162,14 +174,32 @@ export class GameState {
     this.promptHistory.push(this.prompt)
   }
 
-  getRestrictedState(username: string) {
-    let restrictedState: GameState = JSON.parse(JSON.stringify(this));
+  shuffleArray(array: any) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
 
-    restrictedState.chairs.forEach((chair: Chair) => {
+  getRestrictedState(username: string) {
+    const restrictedState: GameState = JSON.parse(JSON.stringify(this));
+
+    restrictedState.answersSubmitted = [];
+
+    restrictedState.chairs.forEach((chair: Chair, chairIndex: number) => {
+      if(this.currentTurn !== chairIndex && chair.cardsSubmitted){
+        console.log(JSON.stringify(chair.cardsSubmitted));
+        restrictedState.answersSubmitted.push(new Answer(chairIndex, chair.cardsSubmitted));
+      }
       if(chair.username !== username){
-        delete chair.cards
+        delete chair.cards;
+        delete chair.cardsSubmitted;
       }
     });
+
+    this.shuffleArray(restrictedState.answersSubmitted);
 
     return restrictedState;
   }
