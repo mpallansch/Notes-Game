@@ -22,7 +22,7 @@ const prompts = [
   'Describe the inside of a Chuck E. Cheese',
   'Give a presentation about drugs to elementary school children',
   'Why is cocaine illegal',
-  'Tell your date they look nothing like their Bubmble photo',
+  'Tell your date they look nothing like their Bumble photo',
   'Write a thesis statement for a PHD in feminism',
   'What do you learn on day one of airplane pilot training',
   'Explain the joys of gardening',
