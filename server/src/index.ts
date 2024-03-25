@@ -491,8 +491,10 @@ app.post('/login', (req: any, res: any) => {
 
 // Used by the client to delete their session
 app.get('/logout', (req: any, res: any) => {
-    req.session.destroy();
-    res.send({ error: false, message: 'Logged out successfully.' });
+    if(req.session && req.session.destroy){
+        req.session.destroy();
+        res.send({ error: false, message: 'Logged out successfully.' });
+    }
 });
 
 // Used by the client to reset password
@@ -723,7 +725,18 @@ io.on('connection', (socket: any) => {
                         
                         const chair = state.chairs[socket.chairIndex];
 
+                        const newCards: any = [];
+
                         chair.cardsSubmitted = params.cardsSubmitted;
+
+                        chair.cards.forEach((card: any) => {
+                            if(chair.cardsSubmitted.filter((cardSubmitted: any) => cardSubmitted.text === card.text).length === 0){
+                                newCards.push(card);
+                            }
+                        });
+
+                        chair.cards = newCards;
+
                         chair.submitted = true;
 
                         state.latestAction = ACTION_SUBMIT;
