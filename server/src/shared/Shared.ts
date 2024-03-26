@@ -190,7 +190,6 @@ export class GameState {
 
     restrictedState.chairs.forEach((chair: Chair, chairIndex: number) => {
       if(this.currentTurn !== chairIndex && chair.cardsSubmitted){
-        console.log(JSON.stringify(chair.cardsSubmitted));
         restrictedState.answersSubmitted.push(new Answer(chairIndex, chair.cardsSubmitted));
       }
       if(chair.username !== username){
