@@ -299,6 +299,11 @@ app.get('/check-login', (req: any, res: any) => {
 });
 
 // Used by the client to check if the username has already been taken
+app.get('/delete-player-in-game', (req: any, res: any) => {
+    delete playersInGame[req.query.username];
+});
+
+// Used by the client to check if the username has already been taken
 app.get('/check-username-availability', (req: any, res: any) => {
     //db.query('SELECT COUNT(*) AS UserCount FROM Users WHERE UserName = ?', [req.query.username], (err, results, fields) => {
     db.get('SELECT COUNT(*) AS UserCount FROM Users WHERE UserName = ?', [req.query.username], (err, dbRes) => {
