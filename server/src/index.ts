@@ -754,7 +754,7 @@ io.on('connection', (socket: any) => {
                         })
                         
                         if(allSubmitted){
-                            state.phase = PHASE_SELECTING;
+                            state.submitAnswers();
                         }
 
                         sendRestrictedState(socket.gameId);
@@ -769,15 +769,27 @@ io.on('connection', (socket: any) => {
                     if (isActionValid(state, socket.chairIndex, ACTION_SELECT, params)) {
                         state.latestAction = ACTION_SELECT;
 
+                        state.answersSubmitted.forEach((answer: any) => {
+                            if(answer.chairIndex === params.chairIndex){
+                                answer.selected = true;
+                            }
+                        })
                         state.chairs[params.chairIndex].points++;
                         state.actionHistory.push(`${state.chairs[socket.chairIndex].username} has picked ${state.chairs[params.chairIndex].username}'s response! They now have ${state.chairs[params.chairIndex].points} points`);
-                        if(state.chairs[params.chairIndex].points === state.pointsToWin){
-                            state.winner = state.chairs[params.chairIndex].username;
-                            state.actionHistory.push(`${state.chairs[params.chairIndex].username} has won the game!`);
-                        }
+                        state.delay = true;
 
-                        state.resetRoundVariables();
-                        state.incrementTurn();
+                        setTimeout(() => {
+                            state.delay = false;
+                            if(state.chairs[params.chairIndex].points === state.pointsToWin){
+                                state.winner = state.chairs[params.chairIndex].username;
+                                state.actionHistory.push(`${state.chairs[params.chairIndex].username} has won the game!`);
+                            }
+
+                            state.resetRoundVariables();
+                            state.incrementTurn();
+
+                            sendRestrictedState(socket.gameId);
+                        }, state.delayTime);
 
                         sendRestrictedState(socket.gameId);
                     }

@@ -457,7 +457,7 @@ export default function Game() {
                   </>}
 
                   {gameState.answersSubmitted.map((answer: Answer) => (
-                    <a href="#" className="note-space" onClick={(e) => {e.preventDefault(); select(answer.chairIndex)}}>
+                    <a href="#" className={`note-space${answer.selected ? ' selected' : ''}`} onClick={(e) => {e.preventDefault(); select(answer.chairIndex)}}>
                       {answer.cardsSubmitted.map((card: Card) => 
                         <button className="card placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`}}>{card.text}</button>
                       )}

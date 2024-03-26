@@ -2,7 +2,6 @@ const roundDelay = 2500;
 const shortRoundDelay = 500;
 
 export const minPlayers = 3;
-export const maxPlayers = 8;
 export const itemsPerPage = 5;
 export const numberOfCards = 50;
 export const pointsToWin = 5;
@@ -119,12 +118,14 @@ export class Card {
 }
 
 export class Answer {
+  selected: boolean = false;
   chairIndex: number;
   cardsSubmitted: Array<Card> = [];
 
-  constructor(chairIndex: number, cardsSubmitted: Array<Card>){
+  constructor(chairIndex: number, cardsSubmitted: any, selected: boolean){
     this.chairIndex = chairIndex;
     this.cardsSubmitted = cardsSubmitted;
+    this.selected = selected;
   }
 }
 
@@ -133,6 +134,7 @@ export class Chair {
   cards?: Array<Card> = [];
   cardsSubmitted?: Array<Card> = [];
   submitted: boolean = false;
+  selected: boolean = false;
   points: number = 0;
 
   constructor(username: string){
@@ -151,6 +153,7 @@ export class GameState {
   chairs: any = [];
 
   pointsToWin: number = pointsToWin;
+  delayTime: number = roundDelay;
 
   phase: number = PHASE_SUBMITTING;
   started: boolean =  false;
@@ -186,19 +189,12 @@ export class GameState {
   getRestrictedState(username: string) {
     const restrictedState: GameState = JSON.parse(JSON.stringify(this));
 
-    restrictedState.answersSubmitted = [];
-
     restrictedState.chairs.forEach((chair: Chair, chairIndex: number) => {
-      if(this.currentTurn !== chairIndex && chair.cardsSubmitted){
-        restrictedState.answersSubmitted.push(new Answer(chairIndex, chair.cardsSubmitted));
-      }
       if(chair.username !== username){
         delete chair.cards;
         delete chair.cardsSubmitted;
       }
     });
-
-    this.shuffleArray(restrictedState.answersSubmitted);
 
     return restrictedState;
   }
@@ -219,11 +215,13 @@ export class GameState {
 
   resetRoundVariables() {
     this.phase = PHASE_SUBMITTING;
+    this.answersSubmitted = [];
     const possiblePrompts = prompts.filter(prompt => this.promptHistory.indexOf(prompt) === -1);
     this.prompt = possiblePrompts[Math.round(Math.random() * (possiblePrompts.length - 1))];
     this.promptHistory.push(this.prompt)
 
     this.chairs.forEach((chair: Chair) => {
+      chair.selected = false;
       chair.submitted = false;
       chair.cardsSubmitted = [];
       const cardsAvailable = cardWords.filter(cardWord => (chair.cards?.filter(card => card.text === cardWord).length || 0) > 0);
@@ -240,6 +238,16 @@ export class GameState {
     if(this.currentTurn >= this.chairs.length){
         this.currentTurn = 0;
     }
+  }
+
+  submitAnswers(){
+    this.phase = PHASE_SELECTING;
+    this.chairs.forEach((chair: Chair, chairIndex: number) => {
+      if(chairIndex !== this.currentTurn){
+        this.answersSubmitted.push(new Answer(chairIndex, chair.cardsSubmitted, chair.selected))
+      }
+    })
+    this.shuffleArray(this.answersSubmitted);
   }
 }
 
@@ -265,10 +273,6 @@ export class GameMeta {
   joinable() {
     if(this.state.started) {
       return 'Game already started';
-    }
-
-    if(this.playerStates.length >= maxPlayers) {
-      return 'Game is full';
     }
   }
 
