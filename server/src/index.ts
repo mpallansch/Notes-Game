@@ -12,7 +12,7 @@ import { Server } from 'socket.io';
 import auth from './auth';
 import config from './constants/Config';
 import constants from './constants/Constants';
-import { PlayerInfo, PlayerState, GameMeta, Chair, Card, itemsPerPage, validate, isActionValid, ACTION_SUBMIT, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING, GameState } from './shared/Shared';
+import { PlayerInfo, PlayerState, GameMeta, Chair, Card, itemsPerPage, validate, isActionValid, pointsToWin, roundDelay, ACTION_SUBMIT, ACTION_SKIP, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING, GameState } from './shared/Shared';
 import e from 'express';
 //import { Connection, MysqlError } from 'mysql';
 
@@ -762,6 +762,21 @@ io.on('connection', (socket: any) => {
                 }
             });
 
+            socket.on('skip', (params: any) => {
+                if (socket.gameMeta && socket.chairIndex !== undefined) {
+                    const state = socket.gameMeta.state;
+
+                    if (isActionValid(state, socket.chairIndex, ACTION_SKIP, params)) {
+                        state.latestAction = ACTION_SKIP;
+
+                        state.newPrompt();
+
+                        sendRestrictedState(socket.gameId);
+                    }
+
+                }
+            })
+
             socket.on('select', (params: any) => {
                 if (socket.gameMeta && socket.chairIndex !== undefined) {
                     const state = socket.gameMeta.state;
@@ -780,7 +795,7 @@ io.on('connection', (socket: any) => {
 
                         setTimeout(() => {
                             state.delay = false;
-                            if(state.chairs[params.chairIndex].points === state.pointsToWin){
+                            if(state.chairs[params.chairIndex].points === pointsToWin){
                                 state.winner = state.chairs[params.chairIndex].username;
                                 state.actionHistory.push(`${state.chairs[params.chairIndex].username} has won the game!`);
                             }
@@ -789,7 +804,7 @@ io.on('connection', (socket: any) => {
                             state.incrementTurn();
 
                             sendRestrictedState(socket.gameId);
-                        }, state.delayTime);
+                        }, roundDelay);
 
                         sendRestrictedState(socket.gameId);
                     }

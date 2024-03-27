@@ -1,5 +1,4 @@
-const roundDelay = 5000;
-
+export const roundDelay = 5000;
 export const minPlayers = 3;
 export const itemsPerPage = 5;
 export const numberOfCards = 50;
@@ -7,7 +6,8 @@ export const pointsToWin = 5;
 export const PHASE_SUBMITTING = 0;
 export const PHASE_SELECTING = 1;
 export const ACTION_SUBMIT = 0;
-export const ACTION_SELECT = 1;
+export const ACTION_SKIP = 1;
+export const ACTION_SELECT = 2;
 
 const prompts = [
   'Describe a frightening medical condition',
@@ -151,9 +151,6 @@ export class Chair {
 export class GameState {
   chairs: any = [];
 
-  pointsToWin: number = pointsToWin;
-  delayTime: number = roundDelay;
-
   phase: number = PHASE_SUBMITTING;
   started: boolean =  false;
   delay: boolean = false;
@@ -215,9 +212,7 @@ export class GameState {
   resetRoundVariables() {
     this.phase = PHASE_SUBMITTING;
     this.answersSubmitted = [];
-    const possiblePrompts = prompts.filter(prompt => this.promptHistory.indexOf(prompt) === -1);
-    this.prompt = possiblePrompts[Math.round(Math.random() * (possiblePrompts.length - 1))];
-    this.promptHistory.push(this.prompt)
+    this.newPrompt()
 
     this.chairs.forEach((chair: Chair) => {
       chair.selected = false;
@@ -230,6 +225,15 @@ export class GameState {
         cardsAvailable.splice(cardIndex, 1);
       }
     })
+  }
+
+  newPrompt(){
+    let possiblePrompts = prompts.filter(prompt => this.promptHistory.indexOf(prompt) === -1);
+    if(possiblePrompts.length === 0){
+      possiblePrompts = prompts;
+    }
+    this.prompt = possiblePrompts[Math.round(Math.random() * (possiblePrompts.length - 1))];
+    this.promptHistory.push(this.prompt)
   }
 
   incrementTurn(){

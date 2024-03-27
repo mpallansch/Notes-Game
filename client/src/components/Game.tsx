@@ -110,6 +110,10 @@ export default function Game() {
     socket.emit('begin-request');
   };
 
+  const skip = () => {
+    socket.emit('skip');
+  }
+
   const place = (cardIndex: number, x: number, y: number) => {
     const updatedCardsSelected = {...cardsSelected};
     if(!updatedCardsSelected[cardIndex]){
@@ -430,6 +434,10 @@ export default function Game() {
                 {gameState.phase === PHASE_SUBMITTING && <>
                   {gameState.currentTurn === currentPlayerOffset && <>
                     Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} players to submit 
+                    <br/><br/>
+                    {gameState.chairs.filter((chair: Chair, chairIndex: number) => {
+                      return chairIndex !== gameState.currentTurn && chair.submitted;
+                    }).length === 0 && <button onClick={skip}>Skip Prompt</button>}
                   </>}
                   {gameState.currentTurn !== currentPlayerOffset && !currentChair.submitted && <>
                     <div className="note-space" onDrop={cardDrop} onDragOver={e => e.preventDefault()} onDragEnter={e => e.preventDefault()}>
