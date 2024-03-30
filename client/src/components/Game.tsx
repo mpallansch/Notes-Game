@@ -16,7 +16,6 @@ export default function Game() {
 
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const [ ignored, forceUpdate] = useState<any>(); 
-  const [ navShow, setNavShow ] = useState<boolean>();
   const [ socketState, _setSocketState] = useState<any>({initialized: false});
   const [ draftMessage, setDraftMessage ] = useState<string>('');
   const [ gameState, setGameState ] = useState<GameState>();
@@ -336,56 +335,34 @@ export default function Game() {
 
   return (
     <div className="page">
-      <div id="side-nav" className={navShow ? 'show' : ''}>
-        <button id="nav-toggle" onClick={() => {setNavShow(!navShow)}}>{navShow ? '<' : '>'}</button>
-
-        <h1>{gameId}</h1>
-
-        <div id="player-list">
-          {players.map((playerInList: any) => (
-            <p className={`player ${!playerInList.connected ? 'disconnected' : ''}`} key={playerInList.username}>
-              <span className={`ready-indicator ${playerInList.ready ? 'ready' : ''}`}></span>
-              <span className="player-score">{getChairScore(playerInList.username)}</span>
-              <span className="player-name">
-                {playerInList.username}
-              </span>
-              {playerState.host && !playerInList.host && <button className="kick-button" onClick={() => {socket.emit('kick-request', playerInList.username)}}>Kick</button>}
-              {playerInList.host &&  (
-              <span className="host-indicator">
-                <svg viewBox="-1 1 21 20">
-                  <polygon fill="yellow" points="9.9, 1.1, 3.3, 21.78, 19.8, 8.58, 0, 8.58, 16.5, 21.78"></polygon>
-                </svg>
-              </span> 
-              )}
-            </p>
-          ))}
+      <div id="header">
+        <div id="title-container">
+          <h1>{gameId}</h1>
+          <button id="leave-game" type="button" onClick={leave}>Leave Game</button>
         </div>
 
-        <button id="leave-game" type="button" onClick={leave}>Leave Game</button>
-
-        <div id="messages-container">
-          <button className="actions-toggle" onClick={() => {setMessagesToggle(true)}}>Messages</button>
-          <button className="actions-toggle" onClick={() => {setMessagesToggle(false)}}>Actions</button>
-          {!messagesToggle && 
-            <div id="messages" className="actions">
-              {gameState?.actionHistory.map(action => <p className="message">{action}</p>)}
-            </div>
-          }
-          {messagesToggle && 
-            <>
-              <div id="messages">
-                {messages.length === 0 && (
-                  <p className="message">No messages yet!</p>
-                )}
-                {messages.length !== 0 && messages.map((message, index) => (
-                  <p className="message" key={`message${index}`}>{message}</p>
-                ))}
-              </div>
-
-              <textarea id="draft-message" placeholder="Message" value={draftMessage} onKeyPress={e => {if(e.key === 'Enter') sendMessage()}} onChange={(e) => {setDraftMessage(e.target.value.replace('\n', ''))}}></textarea>
-              <button type="button" id="send-message" onClick={sendMessage}>Send</button>
-            </>
-          }
+        <div id="player-list">
+          {players.map((playerInList: any, playerIndex: number) => (
+            <p className={`player${!playerInList.connected ? ' disconnected' : ''}`} key={playerInList.username}>
+              <span className={`bandit ${playerIndex % 2 === 0 ? 'light' : 'dark'}`}>
+                {!gameState?.started  && <span className={`ready-indicator${playerInList.ready ? ' ready' : ''}`}></span>}
+                {playerState.host && !playerInList.host && <button className="kick-button" onClick={() => {socket.emit('kick-request', playerInList.username)}}>Kick</button>}
+              </span>
+              <span className="player-contents">
+                <span className="player-name">
+                  {playerInList.host &&  (
+                    <span className="host-indicator">
+                      <svg viewBox="-1 1 21 20">
+                        <polygon fill="yellow" points="9.9, 1.1, 3.3, 21.78, 19.8, 8.58, 0, 8.58, 16.5, 21.78"></polygon>
+                      </svg>
+                    </span> 
+                  )} 
+                  &nbsp;{playerInList.username}
+                </span>
+                <span className="player-score">Score: {getChairScore(playerInList.username)}</span>
+              </span>
+            </p>
+          ))}
         </div>
       </div>
 
@@ -417,19 +394,6 @@ export default function Game() {
                 {playerState.host && <button type="button" onClick={backToLobby}>Back to Lobby</button>}
                 <button type="button" onClick={leave}>Leave Game</button>
               </div>)}
-              { gameState.chairs.map((ignored: any, chairIndex: number) => {
-                const adjustedIndex = (chairIndex + currentPlayerOffset) % gameState.chairs.length;
-                const chair = gameState.chairs[adjustedIndex];
-                const currentPlayer = chair.username === playerState.username;
-                const position = getChairPosition(currentPlayer, gameState.chairs.length, chairIndex);
-
-                return (
-                  <div className={`chair ${position} player-number-${adjustedIndex}`} key={chair.username}>
-                    <p className={`username${adjustedIndex === gameState.currentTurn ? ' turn' : ''}`}>{chair.username}: {chair.points}</p>
-                  </div>
-                )
-              })
-              }
               <div className="game-area">
                 {gameState.phase === PHASE_SUBMITTING && <>
                   {gameState.currentTurn === currentPlayerOffset && <>
@@ -474,13 +438,40 @@ export default function Game() {
                 </>}
               </div>
             </div>
-
-            <div className="canvas-footer">
-              {gameState.prompt}
-            </div>
           </div>
         }
       </div>
+
+      <div id="messages-container">
+        <span id="messages-buttons">
+          <button className="actions-toggle" onClick={() => {setMessagesToggle(true)}}>Messages</button>
+          <button className="actions-toggle" onClick={() => {setMessagesToggle(false)}}>Actions</button>
+        </span>
+        {!messagesToggle && 
+          <div id="messages" className="actions">
+            {gameState?.actionHistory.map(action => <p className="message">{action}</p>)}
+          </div>
+        }
+        {messagesToggle && 
+          <>
+            <div id="messages">
+              {messages.length === 0 && (
+                <p className="message">No messages yet!</p>
+              )}
+              {messages.length !== 0 && messages.map((message, index) => (
+                <p className="message" key={`message${index}`}>{message}</p>
+              ))}
+            </div>
+
+            <textarea id="draft-message" placeholder="Message" value={draftMessage} onKeyPress={e => {if(e.key === 'Enter') sendMessage()}} onChange={(e) => {setDraftMessage(e.target.value.replace('\n', ''))}}></textarea>
+            <button type="button" id="send-message" onClick={sendMessage}>Send</button>
+          </>
+        }
+      </div>
+
+      {gameState && gameState.prompt && <div id="prompt-container">
+        <span>{gameState.prompt}</span>
+      </div>}
 
       {socketState.initialized && socket && !socket.connected && (
         <div id="connection-error">

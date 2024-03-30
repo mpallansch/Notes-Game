@@ -1,3 +1,8 @@
+@font-face {
+  font-family: ransom;
+  src: url(../assets/fonts/ransom.ttf);
+}
+
 html {
   position: fixed;
   width: 100%;
@@ -10,56 +15,23 @@ html, body, #root, .App, .page {
 }
 
 .App {
-  background-image: linear-gradient(45deg, #5A5, #8D8);
+  background-image: url("../assets/images/background.jpeg");
   background-repeat: no-repeat;
   background-size: cover;
+}
 
-  .card {
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: contain;
-  }
+.header {
+  font-family: ransom;
+  font-size: 80px;
+  position: relative;
+  top: -20px;
 
-  &.theme-1 {
-    background-image: url("../assets/themes/theme-1/images/tables/table-1.svg");
-
-    .card {
-        /* Card Backs */
-        &.theme-card-1 .back {
-          background-image: url("../assets/themes/theme-1/images/card-backs/card-back-1.svg");
-        }
-        &.theme-card-2 .back {
-          background-image: url("../assets/themes/theme-1/images/card-backs/card-back-2.svg");
-        }
-        &.theme-card-3 .back {
-          background-image: url("../assets/themes/theme-1/images/card-backs/card-back-3.svg");
-        }
-        &.theme-card-4 .back {
-          background-image: url("../assets/themes/theme-1/images/card-backs/card-back-4.svg");
-        }
-        &.theme-card-5 .back {
-          background-image: url("../assets/themes/theme-1/images/card-backs/card-back-5.svg");
-        }
-        &.theme-card-6 .back {
-          background-image: url("../assets/themes/theme-1/images/card-backs/card-back-6.svg");
-        }
-        &.theme-card-7 .back {
-          background-image: url("../assets/themes/theme-1/images/card-backs/card-back-7.svg");
-        }
-        &.theme-card-8 .back {
-          background-image: url("../assets/themes/theme-1/images/card-backs/card-back-8.svg");
-        }
-
-        .front {
-          background-image: url("../assets/themes/theme-1/images/card-fronts/roses/rose-1.svg");
-        }
-
-        &.death .front {
-          background-image: url("../assets/themes/theme-1/images/card-fronts/skulls/skull-1.svg");
-        }
-
-      }
-
+  span:first-child {
+    position: absolute;
+    float: right;
+    transform: rotate(-15deg);
+    left: -30px;
+    top: -70px;
   }
 }
 
@@ -69,19 +41,34 @@ input {
 }
 
 a, button, input[type="submit"] {
-  font-size: 0.9em;
-  padding: 3px 10px !important;
-  border-radius: 5px !important;
+  padding: 8px 15px !important;
+  border-radius: 1em !important;
   border-width: 3px;
-  appearance: button;
-  background-color: lightgray;
+  appearance: none;
+  background-color: white;
   border-style: outset;
-  border-color: internal-light-dark(rgb(239, 239, 239), rgb(59, 59, 59));
+  border: none;
   border-color: gray;
+  font-size: 1em;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: rgb(116, 86, 77);
+  cursor: pointer;
 
   &:hover {
     color: white;
     background-color: gray;
+  }
+}
+
+button[disabled]{
+  background-color: gray;
+  color: black;
+  cursor: default;
+
+  &:hover {
+    background-color: gray;
+    color: black;
   }
 }
 
@@ -97,15 +84,20 @@ a, button, input[type="submit"] {
 
   .error-message {
     color: red;
+    padding: 1em;
+    background-color: white;
+    margin: 1em;
+    border-radius: 5px;
   }
 
   nav {
     align-self: stretch;
-    background-image: linear-gradient(45deg, #841, #A63);
+    background-color: rgb(116,86,77);
     box-shadow: 0px 0px 10px gray;
 
     ul {
       list-style-type: none;
+      text-align: right;
 
       li {
         display: inline-block;

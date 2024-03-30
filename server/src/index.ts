@@ -5,21 +5,20 @@ import multer from 'multer';
 import sqlite3 from 'sqlite3';
 import path from 'path';
 import nodemailer from 'nodemailer';
-import * as https from 'https';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 import auth from './auth';
 import config from './constants/Config';
 import constants from './constants/Constants';
-import { PlayerInfo, PlayerState, GameMeta, Chair, Card, itemsPerPage, validate, isActionValid, pointsToWin, roundDelay, ACTION_SUBMIT, ACTION_SKIP, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING, GameState } from './shared/Shared';
+import { PlayerInfo, PlayerState, GameMeta, Chair, itemsPerPage, isActionValid, pointsToWin, roundDelay, ACTION_SUBMIT, ACTION_SKIP, ACTION_SELECT, GameState } from './shared/Shared';
 import e from 'express';
 //import { Connection, MysqlError } from 'mysql';
 
 //let mysql = require('mysql');
 
 // Defines global variables
-const apiWhitelist = ['/login', '/register', '/check-login', '/forgot-password', '/reset-password', '/check-username-availability', '/play-as-guest']; //API calls that aren't protected by session authentication
+const apiWhitelist = ['/login', '/check-login']; //API calls that aren't protected by session authentication
 let socketClients: any = {};
 let gameMetas: any = {};
 let playersInGame: any = {};
@@ -106,37 +105,6 @@ const playerDisconnected = (gameId: string, username: string) => {
     if (playerState) {
         playerState.connected = false;
     }
-};
-
-const sendResetEmail = (email: string, token: string) => {
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-            type: 'OAuth2',
-            user: config.emailFrom,
-            clientId: config.emailClientId,
-            clientSecret: config.emailClientSecret,
-            refreshToken: config.emailRefreshToken,
-            accessToken: config.emailAccessToken
-        }
-    });
-
-    const mail = {
-        from: config.emailFrom,
-        to: email,
-        subject: `${config.name} Password reset link`,
-        html: `Here is your password reset link for ${config.name}. If you did not request this, please ignore. <a href="${config.clientUrl}${config.resetPasswordPath}/${email}/${token}">Reset Password</a>`
-    }
-
-    transporter.sendMail(mail, function (err, info) {
-        if (err) {
-            console.log('Error sending email', err);
-        }
-
-        transporter.close();
-    });
 };
 
 const sendRestrictedState = (gameId: string) => {
@@ -303,269 +271,15 @@ app.get('/delete-player-in-game', (req: any, res: any) => {
     delete playersInGame[req.query.username];
 });
 
-// Used by the client to check if the username has already been taken
-app.get('/check-username-availability', (req: any, res: any) => {
-    //db.query('SELECT COUNT(*) AS UserCount FROM Users WHERE UserName = ?', [req.query.username], (err, results, fields) => {
-    db.get('SELECT COUNT(*) AS UserCount FROM Users WHERE UserName = ?', [req.query.username], (err, dbRes) => {
-       if (err) {
-            res.send({ error: true, message: 'Error connecting to database' });
-            return;
-        }
-
-        //if (results['UserCount'] === 1) {
-        if(dbRes['EXISTS(SELECT 1 FROM Users WHERE username = ?)'] === 1){
-            res.send({ error: false, data: 'unavailable' });
-        } else {
-            res.send({ error: false, data: 'available' });
-        }
-    });
-});
-
-// Used by the client to register a new user
-app.post('/register', (req: any, res: any) => {
-    if (!req.body.email || !req.body.username || !req.body.password) {
-        res.send({ error: true, message: 'Email, username, or password not provided.' });
-        return;
-    }
-
-    if (!validate('email', req.body.email)) {
-        res.send({ error: true, message: 'Email address not valid' });
-        return;
-    }
-
-    if (!validate('username', req.body.username)) {
-        res.send({ error: true, message: 'Username must be at least 3 characters and can only contain numbers, letters, and these special characters: #?!@$%^&*-' });
-        return;
-    }
-
-    if (!validate('password', req.body.password)) {
-        res.send({ error: true, message: 'Password must be at least 12 characters, contain at least one letter and one number, and can only contain numbers, letters, and these special characters: #?!@$%^&*-' });
-        return;
-    }
-
-    const register = () => {
-        const salt = auth.generateSalt(10);
-        const hash: any = auth.hash(req.body.password, salt);
-
-        //db.query('INSERT INTO Users(EmailAddress, UserName, Password, Salt) VALUES(?, ?, ?, ?)', [req.body.email, req.body.username, hash.hashedpassword, salt], (err) => {
-        db.get('INSERT INTO Users(EmailAddress, UserName, Password, Salt) VALUES(?, ?, ?, ?)', [req.body.email, req.body.username, hash.hashedpassword, salt], (err, dbRes) => {
-            if (err) {
-                if (err.message.indexOf('UNIQUE constraint failed: Users.UserName') !== -1) {
-                    res.send({ error: true, message: 'Username is not available. Please try again with a different username.' });
-                } else if (err.message.indexOf('UNIQUE constraint failed: Users.EmailAddress') !== -1) {
-                    res.send({ error: true, message: 'Email address is already registered to an account. Please try again with a different email, or use the forgot password button to regain access to your account.' });
-                } else {
-                    console.log( 'err', err );
-                    res.send({ error: true, message: 'Error adding new user.' });
-                }
-            } else {
-                req.session.playerInfo = new PlayerInfo(req.body.username, req.body.email);
-                res.send({ error: false, data: req.session.playerInfo });
-            }
-        });
-    }
-
-    if(process.env.NODE_ENV === 'production'){
-        const captchaPostData = new URLSearchParams({
-            'secret': config.captchaSecretKey,
-            'response': req.body['g-recaptcha-response']
-        }).toString();
-
-        const captchaRequest = https.request({
-            hostname: 'www.google.com',
-            port: 443,
-            path: '/recaptcha/api/siteverify',
-            method: 'POST',
-            headers: {
-                 'Content-Type': 'application/x-www-form-urlencoded',
-                 'Content-Length': Buffer.byteLength(captchaPostData)
-               }
-          }, (captchaRes: any) => {
-            if (captchaRes.statusCode < 200 || captchaRes.statusCode > 299) {
-                res.send({ error: true, message: 'Could not process at this time. Try again.' });
-                return;
-            }
-    
-            const body: any[] = []
-            captchaRes.on('data', (chunk: any) => body.push(chunk))
-            captchaRes.on('end', () => {
-                try {
-                    const response = JSON.parse(Buffer.concat(body).toString())
-                    if(response.success){
-                        register();
-                    } else {
-                        res.send({ error: true, message: 'Could not process at this time. Try again.' });
-                    }
-                } catch (e) {
-                    res.send({ error: true, message: 'Could not process at this time. Try again.' });
-                }
-            })
-          });
-
-        captchaRequest.on('error', (e) => {
-            res.send({ error: true, message: 'Could not process at this time. Try again.' });
-        });
-        
-        captchaRequest.write(captchaPostData);
-        captchaRequest.end();
-    } else {
-        register();
-    }
-});
-
-app.post('/play-as-guest', (req: any, res: any) => {
+app.post('/login', (req: any, res: any) => {
     req.session.playerInfo = new PlayerInfo(req.body.username, 'Guest', playersInGame[req.body.username]);
     res.send({ error: false, data: req.session.playerInfo });
 })
 
-// Used by the client to login with username and password
-app.post('/login', (req: any, res: any) => {
-    if (!req.body.email) {
-        res.send({ error: true, message: 'Email not provided.' });
-        return;
-    }
-
-    const login = () => {
-        db.get('SELECT * FROM Users WHERE EmailAddress = ?', [req.body.email], (err, row) => {
-            if (err) {
-                res.send({ error: true, message: 'Error accessing database.' });
-            } else {
-                if (!row) {
-                    res.send({ error: true, message: 'No user found with the provided email.' });
-                } else {
-                    let match = auth.compare(req.body.password, { salt: row.Salt, hashedpassword: row.Password });
-
-                    if (match) {
-                        req.session.playerInfo = new PlayerInfo(row.UserName, row.EmailAddress, playersInGame[row.UserName]);
-                        res.send({ error: false, data: req.session.playerInfo });
-                    } else {
-                        res.send({ error: true, message: 'Invalid password.' });
-                    }
-                }
-            }
-        });
-    }
-
-    if(process.env.NODE_ENV === 'production'){
-        const captchaPostData = new URLSearchParams({
-            'secret': config.captchaSecretKey,
-            'response': req.body['g-recaptcha-response']
-        }).toString();
-
-        const captchaRequest = https.request({
-            hostname: 'www.google.com',
-            port: 443,
-            path: '/recaptcha/api/siteverify',
-            method: 'POST',
-            headers: {
-                 'Content-Type': 'application/x-www-form-urlencoded',
-                 'Content-Length': Buffer.byteLength(captchaPostData)
-               }
-          }, (captchaRes: any) => {
-            if (captchaRes.statusCode < 200 || captchaRes.statusCode > 299) {
-                res.send({ error: true, message: 'Could not process at this time. Try again.' });
-                return;
-            }
-    
-            const body: any[] = []
-            captchaRes.on('data', (chunk: any) => body.push(chunk))
-            captchaRes.on('end', () => {
-                try {
-                    const response = JSON.parse(Buffer.concat(body).toString())
-                    if(response.success){
-                        login();
-                    } else {
-                        res.send({ error: true, message: 'Could not process at this time. Try again.' });
-                    }
-                } catch (e) {
-                    res.send({ error: true, message: 'Could not process at this time. Try again.' });
-                }
-            })
-          });
-
-        captchaRequest.on('error', (e) => {
-            res.send({ error: true, message: 'Could not process at this time. Try again.' });
-        });
-        
-        captchaRequest.write(captchaPostData);
-        captchaRequest.end();
-    } else {
-        login();
-    }
-});
-
 // Used by the client to delete their session
 app.get('/logout', (req: any, res: any) => {
-    if(req.session && req.session.destroy){
-        req.session.destroy();
-        res.send({ error: false, message: 'Logged out successfully.' });
-    }
-});
-
-// Used by the client to reset password
-app.get('/forgot-password', (req: any, res: any) => {
-    if (req.query.email) {
-            // db.query('SELECT COUNT(*) AS UserCount FROM Users WHERE EMailAddress = ?', [req.query.email], (err, results, fields) => {
-            //     if (!err && results['UserCount'] === 1) {
-            db.get('SELECT EXISTS(SELECT 1 FROM Users WHERE email = ?)', [req.query.email], (err, dbRes) => {
-            if(!err && dbRes['EXISTS(SELECT 1 FROM Users WHERE email = ?)'] === 1){
-                auth.generateToken().then((token: string) => {
-                    //db.query('INSERT INTO Resets (email, token, date) VALUES (?, ?, ?)', [req.query.email, token, Date.now()], (err, results, fields) => {
-                    db.run('INSERT INTO Resets (email, token, date) VALUES (?, ?, ?)', [req.query.email, token, Date.now()], (err) => {
-                        if (err) {
-                            //db.query('UPDATE Resets SET token = ?, date = ? WHERE email = ?', [token, Date.now(), req.query.email], (err, results, fields) => {
-                            db.run('UPDATE Resets SET token = ?, date = ? WHERE email = ?', [token, Date.now(), req.query.email], () => {
-                                sendResetEmail(req.query.email, token);
-                            });
-                        } else {
-                            sendResetEmail(req.query.email, token);
-                        }
-                    });
-                });
-            }
-        });
-    }
-    res.send({ error: false, message: 'Request received successfully.' });
-});
-
-// Used by the client to reset password
-app.post('/reset-password', (req: any, res: any) => {
-    if (req.body.email && req.body.token && req.body.password) {
-        //db.query('SELECT * FROM Resets WHERE email = ?', [req.body.email], (err, row) => {
-        db.get('SELECT * FROM Resets WHERE email = ?', [req.body.email], (err, row) => {
-            if (err) {
-                return res.send({ error: true, message: 'Error accessing database.' });
-            }
-
-            if (!row || req.body.token !== row.token) {
-                return res.send({ error: true, message: 'Password reset expired.' });
-            }
-
-            //If token is valid, delete record whether successful or not
-            //db.query('DELETE FROM Resets WHERE email = ?', [req.body.email], () => {
-            db.run('DELETE FROM Resets WHERE email = ?', [req.body.email], () => {
-
-            });
-
-            if (Date.now() - row.date > constants.resetExpires) {
-                res.send({ error: true, message: 'Password reset expired' });
-            } else {
-                const salt = auth.generateSalt(10);
-                const hash: any = auth.hash(req.body.password, salt);
-
-                //db.query('UPDATE Users SET hashedpassword = ?, salt = ? WHERE email = ?', [hash.hashedpassword, salt, req.body.email], (err) => {
-                db.run('UPDATE Users SET hashedpassword = ?, salt = ? WHERE email = ?', [hash.hashedpassword, salt, req.body.email], (err) => {
-                        if (err) {
-                        res.send({ error: true, message: 'Error resetting password. Please contact support.' });
-                    } else {
-                        res.send({ error: false, message: 'Password reset successfully!' });
-                    }
-                });
-            }
-        });
-    } else {
-        res.send({ error: true, message: 'Email link not valid.' });
-    }
+    req.session = null;
+    res.send({ error: false, message: 'Logged out successfully.' });
 });
 
 // Used by the client to see if a game is able to be joined

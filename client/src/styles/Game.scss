@@ -1,10 +1,8 @@
-$sideNavWidth: 200px;
-$sideNavTitleHeight: 50px;
 $messageDraftHeight: 100px;
 $messageSendHeight: 30px;
-$playerListSize: 20px;
-$canvasHeaderHeight: 3em;
-$canvasFooterHeight: 4em;
+$readyIndicatorSize: 25px;
+$canvasHeaderHeight: 6em;
+$canvasFooterHeight: 12em;
 $cardMargin: 8px;
 $cardSize: 73px;
 
@@ -29,198 +27,142 @@ $cardSize: 73px;
   }
 }
 
-#side-nav {
+#header {
   z-index: 2;
   position: absolute;
-  width: $sideNavWidth;
-  height: 100%;
+  width: 100%;
+  height: $canvasHeaderHeight;
   left: 0;
-  background-image: linear-gradient(90deg, #999, #CCC);;
-  box-shadow: 5px 5px 10px gray;
+  overflow-x: auto;
+  background-color: rgb(116, 86, 77);
+  white-space: nowrap;
 
-  h1 {    
-    height: $sideNavTitleHeight;
-    line-height: $sideNavTitleHeight;
-    margin: 0;
-    text-align: center;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    width: 100%;
+  #title-container {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 1em;
+
+    h1 {
+      margin: .25em 15px;
+    }
+
+    button {
+      margin-left: 15px;
+    }
   }
 
   #player-list {
-    position: absolute;
-    top: $sideNavTitleHeight + $messageSendHeight;
-    left: 0;
-    height: calc(30% - #{$sideNavTitleHeight + $messageSendHeight});
-    width: 100%;
-    overflow-y: auto;
+    display: inline-block;
+    vertical-align: top;
+    height: 100%;
 
     .player {
+      display: inline-block;
       margin: 0;
-      padding: 5px;
-      border: 1px solid gray;
-      border-top: none;
 
-      &:first-child {
-        border-top: 1px solid gray;
-      }
-
-      &.disconnected {
-        opacity: 0.7;
-      }
-
-      .player-score {
-        border: 1px solid black;
-        padding: .25em;
-        margin-right: .25em;
-      }
-
-      .player-name {
-        height: 30px;
-        line-height: 30px;
-        max-width: 80px;
-        overflow: hidden;
+      .bandit {
+        position: relative;
         display: inline-block;
-        text-overflow: ellipsis;
-        vertical-align: middle;
-      }
+        vertical-align: top;
+        height: $canvasHeaderHeight;
+        width: $canvasHeaderHeight;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: 0 10px;
+        text-align: center;
 
-      .ready-indicator {
-        display: inline-block;
-        vertical-align: middle;
-        margin-right: 5px;
-        width: $playerListSize;
-        height: $playerListSize;
-        border-radius: #{$playerListSize / 2};
-        background-color: red;
+        .ready-indicator {
+          display: inline-block;
+          vertical-align: middle;
+          margin-top: 12px;
+          width: $readyIndicatorSize;
+          height: $readyIndicatorSize;
+          border-radius: #{$readyIndicatorSize / 2};
+          background-color: red;
+  
+          &.ready {
+            background-color: green;
+              &:hover {
+                background-color: gray;
+              }
+          }
+        }
 
-        &.ready {
-          background-color: green;
+        .kick-button {
+          position: absolute;
+          left: 50%;
+          bottom: 0;
+          margin: auto;
+          transform: translate(-50%);
+          padding: 4px 7px !important;
+        }
+
+        &.light {
+          background-image: url("../assets/images/bandit-light.png");
+
+          .kick-button { 
+            background-color: black;
+            color: white;
+
+            &:hover {
+              background-color: gray;
+            }
+          }
+        }
+
+        &.dark {
+          background-image: url("../assets/images/bandit-dark.png");
         }
       }
 
-      .kick-button {
-        float: right;
-      }
-
-      .host-indicator {
+      .player-contents {
         display: inline-block;
-        width: $playerListSize;
-        height: $playerListSize;
-        margin-left: 5px;
-        vertical-align: middle;
+        text-align: center;
+        padding: 1em 0;
+        margin-right: 3em;
+
+        .player-name {
+          display: block;
+        }
+
+        .host-indicator {
+          display: inline-block;
+          width: 1em;
+          height: 1em;
+          vertical-align: middle;
+          margin-top: -5px;
+        }
       }
     }
-  }
-
-  #messages-container {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 70%;
-    width: 100%;
-
-    .actions-toggle {
-      width: 50%;
-    }
-
-    #messages {
-      position: absolute;
-      bottom: calc(#{$messageSendHeight} + #{$messageDraftHeight});
-      height: calc(100% - #{$messageSendHeight * 2} - #{$messageDraftHeight});
-      left: 0;
-      width: 100%;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      padding: 5px;
-      box-sizing: border-box;
-
-      &.actions {
-        bottom: 0;
-        height: calc(100% - 2em);
-      }
-
-      .message {
-        margin: 5px 0;
-      }
-
-      .message:first-child {
-        margin-top: auto;
-      }
-    }
-
-    #draft-message {
-      position: absolute;
-      left: 0;
-      bottom: $messageSendHeight;
-      height: $messageDraftHeight;
-      width: 100%;
-      box-sizing: border-box;
-      resize: none;
-      background-color: lightgray;
-    }
-
-    #send-message {
-      position: absolute;
-      display: inline-block;
-      bottom: 0;
-      left: 0;
-      height: $messageSendHeight;
-      width: 100%;
-    }
-  }
-
-  #leave-game {
-    position: absolute;
-    display: inline-block;
-    top: $sideNavTitleHeight;
-    left: 0;
-    height: $messageSendHeight;
-    width: 100%;
-    font-size: 14px;
-  }
-
-  #nav-toggle {
-    display: none;
-    position: absolute;
-    margin: 0;
-    top: 0;
-    right: -60px;
-    width: 60px;
-    height: 50px;
-    font-size: 22px;
-    font-weight: bold;
-    background: lightgray;
-    border: none;
-    padding: 10px;
-    border-bottom-right-radius: 5px;
-    box-shadow: 2px 2px 3px grey;
   }
 }
 
 #game-canvas-container {
   position: absolute;
-  width: calc(100% - #{$sideNavWidth});
-  height: 100%;
-  left: $sideNavWidth;
+  width: 100%;
+  height: calc(100% - $canvasHeaderHeight - $canvasFooterHeight);
+  top: $canvasHeaderHeight;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  button {
+    color: black;
+  }
 
   .canvas-header {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: $canvasHeaderHeight;
+    height: 3em;
     font-weight: bold;
     text-align: center;
-    background-image: linear-gradient(45deg, #841, #A63);
     box-shadow: 0px 0px 10px gray;
     padding: 1em;
     box-sizing: border-box;
+    background-color: rgb(56, 16, 15);
+    color: white;
 
     span {
       display: inline-block;
@@ -239,9 +181,9 @@ $cardSize: 73px;
   .canvas-body {
     position: absolute;
     left: 0;
-    top: $canvasHeaderHeight;
+    top: 3em;
     width: 100%;
-    height: calc(100% - #{$canvasHeaderHeight} - #{$canvasFooterHeight});
+    height: calc(100% - 5em);
 
     .game-over {
       position: absolute;
@@ -264,7 +206,7 @@ $cardSize: 73px;
 
     .game-area {
       width: 100%;
-      height: calc(100% - $cardSize - 2em);
+      height: 100%;
       text-align: center;
       padding: 1em;
       overflow-y: scroll;
@@ -310,8 +252,7 @@ $cardSize: 73px;
 
       .available-cards {
         margin: 1em auto 2em auto;
-        width: 300px;
-        min-height: 300px;
+        min-width: 300px;
         height: calc(100% - 300px - 2em);
         overflow-y: scroll;
         box-sizing: border-box;
@@ -479,6 +420,65 @@ $cardSize: 73px;
   }
 }
 
+#messages-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: calc($canvasFooterHeight + 16px + 1em);
+  width: 280px;
+  margin-left: 10px;
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
+  box-sizing: border-box;
+  border: 8px solid rgb(56, 16, 15);
+  border-bottom: none;
+  background-color: rgb(177, 144, 128);
+  padding: 1em;
+
+  #messages-buttons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(0, -100%);
+  }
+
+  #messages {
+    height: calc($canvasFooterHeight - 2.5em);
+    margin-bottom: .5em;
+    overflow-y: auto;
+
+    &.actions {
+      height: $canvasFooterHeight;
+    }
+  }
+
+  #draft-message {
+    vertical-align: top;
+    margin-right: 5px;
+    width: calc(100% - 90px);
+  }
+}
+
+#prompt-container {
+  position: absolute;
+  height: calc($canvasFooterHeight + 16px + 1em);
+  right: 0;
+  bottom: 0;
+  width: calc(100% - 310px);
+  text-align: center;
+  background-color: rgb(116, 86, 77);
+  border-top-right-radius: 30px;
+  border-top-left-radius: 30px;
+  margin-right: 10px;
+  font-weight: bold;
+  padding: 4em 1em 1em 1em;
+  box-sizing: border-box;
+
+  span {
+    font-size: 2em;
+  }
+}
+
 #svg-templates {
   display: none;
 }
@@ -522,26 +522,12 @@ $cardSize: 73px;
 }
 
 @media (max-width: 900px) {
-  #side-nav {
-    left: -$sideNavWidth - 10;
-    transition: 0.25s ease-in-out transform;
-
-    #nav-toggle {
-      display: block;
-    }
-  }
-
-  #side-nav.show {
-    transform: translate($sideNavWidth + 10);
-  }
-
   #game-canvas-container {
     left: 0;
     width: 100%;
 
     .canvas-header {
       padding-left: 50px;
-      height: 6em;
 
       span {
         position: absolute;

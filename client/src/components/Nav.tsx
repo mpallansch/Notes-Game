@@ -8,12 +8,9 @@ export default function Nav({account = true}: {account?: boolean}) {
     <nav>
       {account && (
         <ul>
-          <li>
+          {window.location.hash !== '#/home' && <li>
             <Link to="/home">Home</Link>
-          </li>
-          <li>
-            <Link to="/settings">Settings</Link>
-          </li>
+          </li>}
           <li>
             <Logout />
           </li>

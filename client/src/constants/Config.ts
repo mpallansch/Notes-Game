@@ -1,4 +1,4 @@
-export default (process.env.NODE_ENV && process.env.NODE_ENV === 'development') ? {
+export default (true/*process.env.NODE_ENV && process.env.NODE_ENV === 'development'*/) ? {
     apiRoot: 'http://localhost:3001/',
     socketRoot: 'http://localhost:3002/',
     recaptchaSiteKey: '6LeeaRMlAAAAAI_egLHzCjhNnwdy2mNem7901WX_'

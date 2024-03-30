@@ -31,7 +31,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="App theme-1">
+    <div className="App">
       <Context.Provider value={{ player, setPlayer }}>
         <HashRouter>
           <CheckLogin />

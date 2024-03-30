@@ -98,67 +98,68 @@ export default function Home() {
     <div className="page home">
       <Nav />
 
-      <h1>Home</h1>
+      <div className="content-container">
+        {player.inGame && (
+          <p id="already-connected-message">It looks like your account is already playing a game. If you lost connection, try to <button onClick={() => {navigate(`/game/${player.inGame}/reconnect`)}}>Reconnect</button></p>
+        )}
 
-      {player.inGame && (
-        <p>It looks like your account is already playing a game. If you lost connection, try to <button onClick={() => {navigate(`/game/${player.inGame}/reconnect`)}}>Reconnect</button></p>
-      )}
+        {!player.inGame && (
+          <div className="page-body">
+            <div id="enter-game-buttons">
+              <button id="host" onClick={() => {setJoining('host')}}>Host Game</button>
+              <button id="join" onClick={() => {setJoining('join')}}>Join Game</button>
+            </div>
 
-      {!player.inGame && (
-        <div className="page-body">
-          <div id="enter-game-buttons">
-            <button id="host" onClick={() => {setJoining('host')}}>Host Game</button>
-            <button id="join" onClick={() => {setJoining('join')}}>Join Game</button>
-          </div>
-
-          { joining && (
-            <form onSubmit={checkGameStatus}>
-              <h2>{joining === 'host' ? 'Hosting New Game:' : 'Joining Game'}</h2>
-              <fieldset>
-                <label htmlFor="game-name">Game Name:</label>
-                <input id="game-name" type="text" value={gameId} onChange={(e) => {setGameId(e.target.value)}} />
-              </fieldset>
-
-              { !publicGame && (
+            { joining && (
+              <form onSubmit={checkGameStatus}>
+                <h2>{joining === 'host' ? 'Hosting New Game:' : 'Joining Game'}</h2>
                 <fieldset>
-                  <label htmlFor="passphrase">Passphrase:</label>
-                  <input id="passphrase" type="text" value={passphrase} onChange={(e) => {setPassphrase(e.target.value)}} />
+                  <label htmlFor="game-name">Game Name:</label>
+                  <input id="game-name" type="text" value={gameId} onChange={(e) => {setGameId(e.target.value)}} />
                 </fieldset>
+
+                { !publicGame && (
+                  <fieldset>
+                    <label htmlFor="passphrase">Passphrase:</label>
+                    <input id="passphrase" type="text" value={passphrase} onChange={(e) => {setPassphrase(e.target.value)}} />
+                  </fieldset>
+                )}
+
+                <fieldset>
+                  <input name="availability" type="radio" id="public-game" value="true" checked={publicGame} onChange={() => {setPublicGame(true)}}/>
+                  <label htmlFor="public-game">Public</label>
+                  <input name="availability" type="radio" id="private-game" value="false" checked={!publicGame} onChange={() => {setPublicGame(false)}}/>
+                  <label htmlFor="private-game">Private</label>
+                </fieldset>
+
+                <input type="submit" value="Submit" />
+              </form>
+            )}
+
+            {errorMessage && <div>{errorMessage}</div>}
+
+            <div id="public-game-list">
+              <button onClick={() => {getPublicGames()}}>Refresh</button>
+
+              <span id="page-indicator">Page {pageNumber + 1}</span>
+
+              { publicGames.length === 0 && (
+                <p>No public games are currently open! Try creating a new one above.</p>
               )}
-
-              <fieldset>
-                <input name="availability" type="radio" id="public-game" value="true" checked={publicGame} onChange={() => {setPublicGame(true)}}/>
-                <label htmlFor="public-game">Public</label>
-                <input name="availability" type="radio" id="private-game" value="false" checked={!publicGame} onChange={() => {setPublicGame(false)}}/>
-                <label htmlFor="private-game">Private</label>
-              </fieldset>
-
-              <input type="submit" value="Submit" />
-            </form>
-          )}
-
-          {errorMessage && <div>{errorMessage}</div>}
-
-          <div id="public-game-list">
-            <button onClick={() => {getPublicGames()}}>Refresh</button>
-
-            <span id="page-indicator">Page {pageNumber + 1}</span>
-
-            { publicGames.length === 0 && (
-              <p>No public games are currently open! Try creating a new one above.</p>
-            )}
-            { publicGames.length > 0 && (
-              <ul>
-                {publicGames.map((game: any, index: number) => (
-                  <li key={`game-list-${index}`}><button onClick={() => {publicGameClick(game.name)}}><span className="game-name">{game.name}</span><span className="player-count">Players: {game.players}/8</span><span className="ready-count">Ready: {game.ready}/{game.players}</span></button></li>
-                ))}
-              </ul>
-            )}
-            <button id="previous" onClick={decrementPage}>&lt;</button>
-            <button id="next" onClick={incrementPage}>&gt;</button>
+              { publicGames.length > 0 && (
+                <ul>
+                  {publicGames.map((game: any, index: number) => (
+                    <li key={`game-list-${index}`}><button onClick={() => {publicGameClick(game.name)}}><span className="game-name">{game.name}</span><span className="player-count">Players: {game.players}/8</span><span className="ready-count">Ready: {game.ready}/{game.players}</span></button></li>
+                  ))}
+                </ul>
+              )}
+              <button id="previous" onClick={decrementPage}>&lt;</button>
+              <button id="next" onClick={incrementPage}>&gt;</button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 }
