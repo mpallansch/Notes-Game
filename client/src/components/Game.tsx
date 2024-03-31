@@ -216,6 +216,34 @@ export default function Game() {
     return 0;
   };
 
+  const getInstructionMessage = () => {
+    if(gameState){
+      if(gameState.phase === PHASE_SUBMITTING){
+        return `Waiting on ${gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} players`;
+      } else if(gameState.phase === PHASE_SELECTING) {
+        if(gameState.currentTurn !== currentPlayerOffset){
+          return `Waiting on ${gameState.chairs[gameState.currentTurn].username}`;
+        } else {
+          return 'Select a card';
+        }
+      } else {
+        return `${gameState.chairs[gameState.currentTurn].username}'s turn`;
+      }
+    }
+  }
+
+  const getSelectedClass = (playerIndex: number) => {
+    const selectedAnswers = gameState?.answersSubmitted.filter(answer => answer.selected);
+    if(selectedAnswers && selectedAnswers.length > 0){
+      const selectedAnswer = selectedAnswers[0];
+      let selectedUsername = gameState?.chairs[selectedAnswer.chairIndex].username;
+      if(selectedUsername === players[playerIndex].username){
+        return ' selected-highlight'
+      }
+    }
+    return '';
+  }
+
   useEffect(() => {
     connectSocket();
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
@@ -344,7 +372,7 @@ export default function Game() {
         <div id="player-list">
           {players.map((playerInList: any, playerIndex: number) => (
             <p className={`player${!playerInList.connected ? ' disconnected' : ''}`} key={playerInList.username}>
-              <span className={`bandit ${playerIndex % 2 === 0 ? 'light' : 'dark'}`}>
+              <span className={`bandit${playerIndex % 2 === 0 ? ' light' : ' dark'}${currentChair?.username === playerInList.username ? ' turn-highlight' : ''}${getSelectedClass(playerIndex)}`}>
                 {!gameState?.started  && <span className={`ready-indicator${playerInList.ready ? ' ready' : ''}`}></span>}
                 {playerState.host && !playerInList.host && <button className="kick-button" onClick={() => {socket.emit('kick-request', playerInList.username)}}>Kick</button>}
               </span>
@@ -379,7 +407,7 @@ export default function Game() {
           <div id="game-canvas">
             <div className="canvas-header">
               <span className="round-indicator">Round: {gameState.round}</span>
-              <span className="turn-indicator">{gameState.chairs[gameState.currentTurn].username}'s turn</span>
+              <span className="turn-indicator">{getInstructionMessage()}</span>
               <span className="phase-indicator">
                 {gameState.phase === PHASE_SUBMITTING && 'Submitting'}
                 {gameState.phase === PHASE_SELECTING && 'Selecting'}
@@ -397,14 +425,13 @@ export default function Game() {
               <div className="game-area">
                 {gameState.phase === PHASE_SUBMITTING && <>
                   {gameState.currentTurn === currentPlayerOffset && <>
-                    Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} players to submit 
                     <br/><br/>
                     {gameState.chairs.filter((chair: Chair, chairIndex: number) => {
                       return chairIndex !== gameState.currentTurn && chair.submitted;
                     }).length === 0 && <button onClick={skip}>Skip Prompt</button>}
                   </>}
                   {gameState.currentTurn !== currentPlayerOffset && !currentChair.submitted && <>
-                    <div className="note-space" onDrop={cardDrop} onDragOver={e => e.preventDefault()} onDragEnter={e => e.preventDefault()}>
+                    <div className="note-space draft" onDrop={cardDrop} onDragOver={e => e.preventDefault()} onDragEnter={e => e.preventDefault()}>
                       {Object.keys(cardsSelected).map((cardIndex: any) => 
                         <button className="placed-card card" draggable="true" onTouchStart={cardTouchStart} onTouchMove={cardTouchMove} onTouchEnd={e => cardTouchEnd(e, cardIndex)} onDragStart={(e: any) => cardDragStart(e, cardIndex)} style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`}}>{cardsSelected[cardIndex].text}</button>
                       )}
@@ -414,20 +441,9 @@ export default function Game() {
                         cardsSelected[cardIndex] ? <></> : <button className="card" draggable="true" onTouchStart={cardTouchStart} onTouchMove={cardTouchMove} onTouchEnd={e => cardTouchEnd(e, cardIndex)} onDragStart={(e: any) => cardDragStart(e, cardIndex)}>{card.text}</button>
                       )}
                     </div>}
-                    <button onClick={submit}>Submit</button>
-                  </>}
-                  {gameState.currentTurn !== currentPlayerOffset && currentChair.submitted && <>
-                    Waiting on {gameState.chairs.filter((chair: Chair, chairIndex: number) => gameState.currentTurn !== chairIndex && !chair.submitted).length} other players
                   </>}
                 </>}
                 {gameState.phase === PHASE_SELECTING && <>
-                  {gameState.currentTurn === currentPlayerOffset && <>
-                    Your turn to select
-                  </>}
-                  {gameState.currentTurn !== currentPlayerOffset && <>
-                    Waiting on {gameState.chairs[gameState.currentTurn].username} to select a card
-                  </>}
-
                   {gameState.answersSubmitted.map((answer: Answer) => (
                     <a href="#" className={`note-space${answer.selected ? ' selected' : ''}`} onClick={(e) => {e.preventDefault(); select(answer.chairIndex)}}>
                       {answer.cardsSubmitted.map((card: Card) => 
@@ -471,6 +487,7 @@ export default function Game() {
 
       {gameState && gameState.prompt && <div id="prompt-container">
         <span>{gameState.prompt}</span>
+        <button onClick={submit}>Submit</button>
       </div>}
 
       {socketState.initialized && socket && !socket.connected && (

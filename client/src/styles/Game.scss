@@ -64,6 +64,7 @@ $cardSize: 73px;
         position: relative;
         display: inline-block;
         vertical-align: top;
+        margin-right: 1em;
         height: $canvasHeaderHeight;
         width: $canvasHeaderHeight;
         background-size: contain;
@@ -112,6 +113,16 @@ $cardSize: 73px;
 
         &.dark {
           background-image: url("../assets/images/bandit-dark.png");
+        }
+
+        &.turn-highlight {
+          outline: 2px solid blue;
+          box-shadow: 0px 0px 30px blue;
+        }
+
+        &.selected-highlight {
+          outline: 2px solid green;
+          box-shadow: 0px 0px 30px green;
         }
       }
 
@@ -219,9 +230,9 @@ $cardSize: 73px;
       }
 
       .note-space {
-        display: block;
+        display: inline-block;
         position: relative;
-        margin: 2em auto;
+        margin: 1em;
         width: 300px;
         height: 200px;
         appearance: none;
@@ -232,6 +243,10 @@ $cardSize: 73px;
         &.selected {
           outline: 2px solid green;
           box-shadow: 0px 0px 30px green;
+        }
+
+        &.draft {
+          margin: 0;
         }
       }
 
@@ -253,7 +268,7 @@ $cardSize: 73px;
       .available-cards {
         margin: 1em auto 2em auto;
         min-width: 300px;
-        height: calc(100% - 300px - 2em);
+        height: calc(100% - 200px - 4em);
         overflow-y: scroll;
         box-sizing: border-box;
 
@@ -553,8 +568,6 @@ $cardSize: 73px;
 
     .canvas-body {
       overflow-y: auto;
-      top: 6em;
-      height: calc(100% - 6em - 6em);
 
       .game-area {
         height: 100%;

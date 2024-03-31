@@ -139,7 +139,9 @@ export default function Home() {
             {errorMessage && <div>{errorMessage}</div>}
 
             <div id="public-game-list">
-              <button onClick={() => {getPublicGames()}}>Refresh</button>
+              <button id="refresh-button" onClick={() => {getPublicGames()}}>Refresh</button>
+
+              <span id="available-games-header">Available Games</span>
 
               <span id="page-indicator">Page {pageNumber + 1}</span>
 

@@ -10,6 +10,7 @@
     border-radius: 15px;
     padding: 2em 0;
     min-width: 280px;
+    width: 80%;
   }
 
   .page-body {
@@ -27,18 +28,27 @@
 
   #public-game-list {
     margin-top: 25px;
+    text-align: center;
+
+    #refresh-button {
+      float: left;
+    }
+
+    #available-games-header {
+      display: inline-block;
+      font-weight: bold;
+      font-size: 25px;
+      margin-top: 10px;
+    }
 
     ul {
       list-style-type: none;
       padding: 0;
 
       button {
-        background: none;
         width: 100%;
-        border-radius: 0px !important;
         border-width: 2px;
         padding: 10px 10px !important;
-        margin: 0;
         border-collapse: collapse;
 
         .game-name {
@@ -58,6 +68,12 @@
     #page-indicator {
       float: right;
       margin-top: 10px;
+      font-weight: bold;
+      font-size: 25px;
+    }
+
+    #previous {
+      float: left;
     }
 
     #previous, #next {
