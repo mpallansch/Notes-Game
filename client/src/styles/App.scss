@@ -95,6 +95,15 @@ button[disabled]{
     background-color: rgb(116,86,77);
     box-shadow: 0px 0px 10px gray;
 
+    .username {
+      display: grid;
+      align-items: center;
+      float: left;
+      margin: 0 1em;
+      font-weight: bold;
+      height: 100%;
+    }
+
     ul {
       list-style-type: none;
       text-align: right;

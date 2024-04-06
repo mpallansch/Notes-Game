@@ -96,7 +96,7 @@ export default function Home() {
 
   return (
     <div className="page home">
-      <Nav />
+      <Nav player={player} />
 
       <div className="content-container">
         {player.inGame && (
