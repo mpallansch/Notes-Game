@@ -487,7 +487,7 @@ export default function Game() {
 
       {gameState && gameState.prompt && <div id="prompt-container">
         <span>{gameState.prompt}</span>
-        <button onClick={submit} id="submit-button">Submit</button>
+        {gameState.currentTurn !== currentPlayerOffset && !currentChair?.submitted && <button onClick={submit} id="submit-button">Submit</button>}
       </div>}
 
       {socketState.initialized && socket && !socket.connected && (
