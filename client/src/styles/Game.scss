@@ -490,7 +490,21 @@ $cardSize: 73px;
   box-sizing: border-box;
 
   span {
+    display: grid;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 1.5em);
     font-size: 2em;
+  }
+
+  #submit-button {
+    position: absolute;
+    bottom: .5em;
+    left: 50%;
+    transform: translate(-50%, 0);
   }
 }
 
