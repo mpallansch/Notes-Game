@@ -495,9 +495,10 @@ $cardSize: 73px;
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: calc(100% - 1em);
     height: calc(100% - 1.5em);
     font-size: 2em;
+    margin-left: .5em;
   }
 
   #submit-button {
@@ -512,104 +513,73 @@ $cardSize: 73px;
   display: none;
 }
 
-.chair {
-  width: calc(#{(($cardMargin * 2) + $cardSize) * 4});
 
-  .spacing {
-    height: calc(#{(($cardMargin * 2) + $cardSize)});
+$canvasHeaderHeight: 5em;
+
+@media (max-width: 600px) {
+  #header {
+    height: $canvasHeaderHeight;
+
+    #title-container {
+      h1 {
+        font-size: 20px;
+      }
+
+      button {
+        font-size: 16px;
+        margin-left: 5px;
+        padding: 6px 15px !important;
+      }
+    }
+
+    #player-list .player {
+      .bandit {
+        height: $canvasHeaderHeight;
+        width: $canvasHeaderHeight;
+      }
+    }
   }
 
-  .username {
-    margin: #{$cardSize / 3} auto
-  }
-
-  &.east {    
-    transform: rotate(-90deg) translate(#{($cardSize + ($cardMargin * 2)) * 3}, #{($cardSize + ($cardMargin * 2)) * -1});
-  }
-
-  &.west {
-    transform: rotate(90deg) translate(#{($cardSize + ($cardMargin * 2)) * -3}, #{($cardSize + ($cardMargin * 2)) * -1});
-  }
-
-  &.north-east {
-    right: #{$cardSize * -1};
-  }
-
-  &.north-west {
-    left: #{$cardSize * -1};
-    
-  }
-
-  &.south-east {
-    right: #{$cardSize * -1};
-    
-  }
-
-  &.south-west {
-    left: #{$cardSize * -1};
-  }
-}
-
-@media (max-width: 900px) {
   #game-canvas-container {
-    left: 0;
-    width: 100%;
+    height: calc(100% - $canvasHeaderHeight);
+    top: $canvasHeaderHeight;
 
     .canvas-header {
-      padding-left: 50px;
+      padding: .25em;
+      height: 1.75em;
 
-      span {
-        position: absolute;
+      .round-indicator, .phase-indicator {
+        display: none;
       }
 
       .turn-indicator {
-        width: calc(100% - 50px);
-        left: 50px;
-      }
-
-      .round-indicator {
-        left: 1em;
-      }
-
-      .phase-indicator {
-        right: 1em;
-      }
-
-      .round-indicator, .phase-indicator {
-        bottom: 1em;
+        width: 100%;
       }
     }
 
     .canvas-body {
       overflow-y: auto;
+      top: 1.75em;
+      height: calc(100% - $canvasHeaderHeight - 3em);
 
       .game-area {
-        height: 100%;
-
-        .note-space {
-          margin: 0 auto .5em auto;
-        }
+        padding: .25em;
 
         .available-cards {
-          margin: 0 auto 1em auto;
-          padding-right: 3em;
-          width: 300px;
-          min-height: auto;
-          height: calc(100% - 200px - 3.5em);
+          margin: .25em auto 0 auto
         }
       }
     }
+  }
 
-    .canvas-footer {
-      height: 6em;
-    }
+  #messages-container {
+    display: none;
+  }
 
-
-    $cardMargin: 5px;
-    $cardSize: 40px;
-    
-    .chair {
-      display: none;
-    }
+  #prompt-container {
+    width: calc(100% - .5em);
+    margin: .25em;
+    font-size: 12px;
+    height: calc(10em + 16px + 1em);
   }
 }
