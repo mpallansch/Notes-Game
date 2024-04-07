@@ -154,10 +154,13 @@ const addGameMeta = (gameId: string, gameMeta: GameMeta, isPublic: string) => {
 const removeGameMeta = (gameId: string, publicQueueOnly: boolean = false) => {
     if(!publicQueueOnly){
         delete gameMetas[gameId];
-        Object.keys(playersInGame).forEach(playerId => {
+        Object.keys(playersInGame).forEach((playerId: any) => {
             if(playersInGame[playerId] === gameId){
                 delete playersInGame[playerId];
             }
+        })
+        Object.keys(socketClients[gameId]).forEach((username: any) => {
+            delete socketClients[gameId][username].inGame;
         })
         db.run('DELETE FROM GameMetas WHERE GameId = ?', [gameId], (err) => {
             if(err){
