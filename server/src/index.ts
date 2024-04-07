@@ -68,8 +68,24 @@ const removePlayerFromGame = (gameId: string, username: string) => {
                 }
                 gameMeta.playerStates.splice(i, 1);
                 delete playersInGame[gameId];
+                delete socketClients[gameId][username];
+                break;
             }
         }
+        for(let i = 0; i < gameMeta.state.chairs.length; i++){
+            let chair = gameMeta.state.chairs[i];
+            if(chair.username === username){
+                if(i === gameMeta.state.currentTurn){
+                    gameMeta.state.currentTurn++;
+                    if(gameMeta.state.currentTurn >= gameMeta.state.chairs.length){
+                        gameMeta.state.currentTurn = 0;
+                    }
+                }
+                gameMeta.state.chairs.splice(i, 1);
+                break;
+            }
+        }
+        updateSocketChairIndecies(gameId);
     }
 };
 
@@ -154,6 +170,20 @@ const removeGameMeta = (gameId: string, publicQueueOnly: boolean = false) => {
             gameMetasQueue.splice(i, 1);
             break;
         }
+    }
+}
+
+const updateSocketChairIndecies = (gameId: string) => {
+    let gameMeta = gameMetas[gameId];
+    if(gameMeta){
+        Object.keys(socketClients[gameId]).forEach((username: string) => {
+            for (let i = 0; i < gameMeta.playerStates.length; i++) {
+                if (gameMeta.playerStates[i].username === username) {
+                    socketClients[gameId][username].chairIndex = i;
+                    break;
+                }
+            }
+        })
     }
 }
 
