@@ -372,7 +372,7 @@ export default function Game() {
         <div id="player-list">
           {players.map((playerInList: any, playerIndex: number) => (
             <p className={`player${!playerInList.connected ? ' disconnected' : ''}`} key={playerInList.username}>
-              <span className={`bandit${playerIndex % 2 === 0 ? ' light' : ' dark'}${currentChair?.username === playerInList.username ? ' turn-highlight' : ''}${getSelectedClass(playerIndex)}`}>
+              <span className={`bandit${playerIndex % 2 === 0 ? ' light' : ' dark'}${gameState?.chairs[gameState.currentTurn].username === playerInList.username ? ' turn-highlight' : ''}${getSelectedClass(playerIndex)}`}>
                 {!gameState?.started  && <span className={`ready-indicator${playerInList.ready ? ' ready' : ''}`}></span>}
                 {playerState.host && !playerInList.host && <button className="kick-button" onClick={() => {socket.emit('kick-request', playerInList.username)}}>Kick</button>}
               </span>
