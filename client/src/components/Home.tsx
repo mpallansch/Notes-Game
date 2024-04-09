@@ -62,7 +62,7 @@ export default function Home() {
   };
 
   const leaveGame = () => {
-    API.request(`leave-game?gameId=${player.inGame}`).then((response: Array<string>) => {
+    API.request(`leave-game`).then((response: Array<string>) => {
       window.location.reload();
     });
   };

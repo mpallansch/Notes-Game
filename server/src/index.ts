@@ -357,7 +357,7 @@ app.get('/public-games', (req: any, res: any) => {
 });
 
 app.get('/leave-game', (req: any, res: any) => {
-    const gameId = req.query.gameId;
+    const gameId = req.session.playerInfo.inGame;
     const username = req.session.playerInfo.username;
     const gameMeta = gameMetas[gameId];
 
