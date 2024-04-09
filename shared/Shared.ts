@@ -221,7 +221,7 @@ export class GameState {
       const cardsAvailable = cardWords.filter(cardWord => (chair.cards?.filter(card => card.text === cardWord).length || 0) > 0);
       for(let i = 0; i < numberOfCards - (chair.cards?.length || 0); i++){
         const cardIndex = Math.round(Math.random() * (cardsAvailable.length - 1));
-        chair.cards?.push(new Card(cardWords[cardIndex]));
+        chair.cards?.push(new Card(cardsAvailable[cardIndex]));
         cardsAvailable.splice(cardIndex, 1);
       }
     })
