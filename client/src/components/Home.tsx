@@ -61,6 +61,12 @@ export default function Home() {
     });
   };
 
+  const leaveGame = () => {
+    API.request(`leave-game?gameId=${player.inGame}`).then((response: Array<string>) => {
+      window.location.reload();
+    });
+  };
+
   const publicGameClick = (clickedGameId: string) => {
     let formData = new FormData();
     formData.append('gameId', clickedGameId);
@@ -100,7 +106,7 @@ export default function Home() {
 
       <div className="content-container">
         {player.inGame && (
-          <p id="already-connected-message">It looks like your account is already playing a game. If you lost connection, try to <button onClick={() => {navigate(`/game/${player.inGame}/reconnect`)}}>Reconnect</button></p>
+          <p id="already-connected-message">It looks like your account is already playing a game. If you lost connection, try to <button onClick={() => {navigate(`/game/${player.inGame}/reconnect`)}}>Reconnect</button> or you can <button onClick={leaveGame}>Leave Game</button></p>
         )}
 
         {!player.inGame && (

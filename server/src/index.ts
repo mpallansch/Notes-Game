@@ -356,6 +356,35 @@ app.get('/public-games', (req: any, res: any) => {
     res.send({ error: false, data: gameMetasQueue.slice(page * itemsPerPage, (page + 1) * itemsPerPage).map((gameMeta) => { return { name: gameMeta.id, players: gameMeta.playerStates.length, ready: gameMeta.playerStates.filter((playerState) => { playerState.ready }).length } }) });
 });
 
+app.get('/leave-game', (req: any, res: any) => {
+    const gameId = req.query.gameId;
+    const username = req.session.playerInfo.username;
+    const gameMeta = gameMetas[gameId];
+
+    if (gameMeta) {
+        if (gameMeta.playerStates.length === 1) {
+            removeGameMeta(gameId);
+
+            io.of('/').in(gameId).disconnectSockets(true);
+        } else {
+            removePlayerFromGame(gameId, username);
+        }
+    }
+
+    delete req.session.playerInfo.inGame;
+    delete playersInGame[username];
+    if (socketClients[gameId]) {
+        delete socketClients[gameId][username];
+        if (Object.keys(socketClients[gameId]).length === 0) {
+            delete socketClients[gameId];
+        }
+    }
+
+    io.to(gameId).emit('players', gameMeta.playerStates);
+
+    res.send({ error: false, message: 'Game left successfully.' });
+})
+
 // Initializes express app on the specified port
 app.listen(config.apiPort, () => {
     console.log(`Example app listening on port ${config.apiPort}`);
