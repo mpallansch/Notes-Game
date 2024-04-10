@@ -68,7 +68,9 @@ const removePlayerFromGame = (gameId: string, username: string) => {
                 }
                 gameMeta.playerStates.splice(i, 1);
                 delete playersInGame[gameId];
-                delete socketClients[gameId][username];
+                if(socketClients[gameId]){
+                    delete socketClients[gameId][username];
+                }
                 break;
             }
         }
@@ -159,9 +161,11 @@ const removeGameMeta = (gameId: string, publicQueueOnly: boolean = false) => {
                 delete playersInGame[playerId];
             }
         })
-        Object.keys(socketClients[gameId]).forEach((username: any) => {
-            delete socketClients[gameId][username].inGame;
-        })
+        if(socketClients[gameId]){
+            Object.keys(socketClients[gameId]).forEach((username: any) => {
+                delete socketClients[gameId][username].inGame;
+            })
+        }
         db.run('DELETE FROM GameMetas WHERE GameId = ?', [gameId], (err) => {
             if(err){
                 console.log('Error removing GameMeta', gameId);
