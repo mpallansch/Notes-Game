@@ -182,7 +182,7 @@ const removeGameMeta = (gameId: string, publicQueueOnly: boolean = false) => {
 
 const updateSocketChairIndecies = (gameId: string) => {
     let gameMeta = gameMetas[gameId];
-    if(gameMeta){
+    if(gameMeta && socketClients[gameId]){
         Object.keys(socketClients[gameId]).forEach((username: string) => {
             for (let i = 0; i < gameMeta.playerStates.length; i++) {
                 if (gameMeta.playerStates[i].username === username) {

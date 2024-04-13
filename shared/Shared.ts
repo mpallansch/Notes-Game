@@ -1,8 +1,14 @@
 export const roundDelay = 5000;
 export const minPlayers = 3;
 export const itemsPerPage = 5;
-export const numberOfCards = 50;
 export const pointsToWin = 5;
+export const cardQuantities: any = {
+  words: 40,
+  punctuation: 5,
+  modifiers: 5,
+  filler: 15
+}
+
 export const PHASE_SUBMITTING = 0;
 export const PHASE_SELECTING = 1;
 export const ACTION_SUBMIT = 0;
@@ -57,7 +63,19 @@ const prompts = [
   'Write an excuse for driving 125mph in a school zone'
 ];
 
-const cardWords = ['nibble','flesh','bomb','bare','area','challenge','swap','hundred','fish','wound','relish','weenie','hunt','woman','fantasy','boy','girl','grow','shrink','neck','egg','leak','jelly','scream','slide','tiny','grab','meat','in','gnarly','abscess','attempt','raw','drama','tough','mad','dump','disappear','have','did','not','elaborate','chaos','booty','please','crucial','human','scenario','wonderful','ceremony','crowd','chant','drug','bender','heavy','tongue','bamboozle','toast','alter','illness','rub','cheese','on','skin','gently','press','potato','to','brain','numerous','tissue','plop','surprise','cadaver','cherish','boob','now','for','it','yet','saggy','insidious','hostile','friend','visit','crack','anguish','pause','struggle','moist','panties','anxiety','young','man','why','foot','enemy','I','suffer','hike','was','sexy','pantsuit','innards','has','small','poke','storm','face','saw','itch','absorb','when','jerk','with','creep','y','wink','unlikely','vegetable','high','damage','princess','pray','so','pop','float','question','inquiry','too','walk','smooth','surge','i\'d','betrayal','behind','head','crisis','soul','like','fix','up','cure','also','rock','think','if','bitchy','whip','asset','argue','do','basic','doubt','work','kingdom','devil','money','bite','hurt','lucky','mind','test','shark','mushroom','party','cam','mat','blake','joe','moon','carl','mush','kelp','fly','torment','space','attain','despise','ly','miss','amazing','night','then','arrest','juicy','crash','strategy','flap','jam','your','those','strive','keep','blow','eat','see','cry','baby','school','slight','prize','price','climb','pink','cruel','chocolate','daddy','commotion','we','rotten','alien','average','dangerous','crunch','thunder','flame','poop','UFO','wife','belief','her','shirt','seem','good','study','more','firm','genital','can','delight','go','s','wish','but','?','record','no','happy','ooze','pump','seduce','curious','stroke','him','filth','sack','yummy','dance','listen','finger','duck','day','nose','nail','animal','assassin','at','large','my','organic','murder','bag','a','travel','catch','his','ass','warrior','around','some','old','stink','shelter','because','crave','adventure','say','any','noise','darkness','she','cute','batter','attack','assault','us','terrify','love','bowel','anatomy','cake','amount','damp','hero','object','foul','bank','chocolates','squirt','evolve','excuse','burn','blunder','abuse','search','fester','laser','conflict','stomach','after','pad','ed','wave','grate','hey','peel','hammer','already','apply','place','blame','plug','bone','big','TV','agoraphobia']
+const cards: any = {
+  words: ['nibble','flesh','bomb','bare','area','challenge','swap','hundred','fish','wound','relish','weenie','hunt','woman','fantasy','boy','girl','grow','shrink','neck','egg','leak','jelly','scream','slide','tiny','grab','meat','gnarly','abscess','attempt','raw','drama','tough','mad','dump','disappear','elaborate','chaos','booty','please','crucial','human','scenario','wonderful','ceremony','crowd','chant','drug','bender','heavy','tongue','bamboozle','toast','alter','illness','rub','cheese','skin','gently','press','potato','brain','numerous','tissue','plop','surprise','cadaver','cherish','boob','saggy','insidious','hostile','friend','visit','crack','anguish','pause','struggle','moist','panties','anxiety','young','man','why','foot','enemy','suffer','hike','sexy','pantsuit','innards','small','poke','storm','face','saw','itch','absorb','jerk','creep','wink','unlikely','vegetable','high','damage','princess','pray','pop','float','question','inquiry','walk','smooth','surge','betrayal','behind','head','crisis','soul','like','fix','up','cure','also','rock','think','bitchy','whip','asset','argue','basic','doubt','work','kingdom','devil','money','bite','hurt','lucky','mind','test','shark','mushroom','party','cam','mat','blake','joe','moon','carl','mush','kelp','fly','torment','space','attain','despise','miss','amazing','night','arrest','juicy','crash','strategy','flap','jam','your','strive','keep','blow','eat','see','cry','baby','school','slight','prize','price','climb','pink','cruel','chocolate','daddy','commotion','rotten','alien','average','dangerous','crunch','thunder','flame','poop','UFO','wife','belief','her','shirt','seem','good','study','more','firm','genital','delight','wish','record','happy','ooze','pump','seduce','curious','stroke','filth','sack','yummy','dance','listen','finger','duck','day','nose','nail','animal','assassin','large','organic','murder','bag','travel','catch','ass','warrior','around','some','old','stink','shelter','crave','adventure','say','noise','darkness','cute','batter','attack','assault','terrify','love','bowel','anatomy','cake','amount','damp','hero','object','foul','bank','chocolates','squirt','evolve','excuse','burn','blunder','abuse','search','fester','laser','conflict','stomach','pad','wave','grate','hey','peel','hammer','apply','place','blame','plug','bone','big','TV'],
+  punctuation: ['?','!','.',',','...','-',':','/'],
+  modifiers: ['s','es','ed','ing','y','ly','er','est','un'],
+  filler: [
+    'a','an','the', //articles
+    'I','I\'d','him','her','his','she','he','my','your','it','those','these','we','us','any', //pronouns
+    'in','on','of','for','than','from','with','to','after','at', //prepositions
+    'if','so','but','because', // conjunctions
+    'then','now','not','already','yet','when','too','no', //adverbs
+    'have','did','has','was','do','can','go' // verb
+  ]
+};
 
 const validationRE: any = {
   'email': /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
@@ -74,6 +92,32 @@ export function validate (fieldName: string, fieldValue: string) {
     return re.test(fieldValue.toLowerCase());
   }
   return false;
+}
+
+export function shuffleArray(array: any) {
+  for (var i = array.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = array[i];
+      array[i] = array[j];
+      array[j] = temp;
+  }
+}
+
+export function selectNewCards(chair: Chair){
+  const additions: Card[] = [];
+  Object.keys(cards).forEach((type) => {
+    const cardsRemaining = cardQuantities[type] - (chair.cards?.filter((card: Card) => cards[type].indexOf(card.text) !== -1) || []).length;
+    const cardsAvailable = cards[type].filter((cardWord: string) => (chair.cards?.filter((card: Card) => card.text === cardWord).length || 0) === 0);
+    for(let i = 0; i < cardsRemaining; i++){
+      const cardIndex = Math.round(Math.random() * (cardsAvailable.length - 1));
+      additions.push(new Card(cardsAvailable[cardIndex]));
+      cardsAvailable.splice(cardIndex, 1);
+    }
+  });
+
+  shuffleArray(additions);
+
+  chair.cards = chair.cards?.concat(additions);
 }
 
 export class PlayerInfo {
@@ -139,12 +183,7 @@ export class Chair {
   constructor(username: string){
     this.username = username;
 
-    const cardsAvailable = [...cardWords];
-    for(let i = 0; i < numberOfCards; i++){
-      const randomIndex = Math.round(Math.random() * (cardsAvailable.length - 1));
-      this.cards?.push(new Card(cardsAvailable[randomIndex]));
-      cardsAvailable.splice(randomIndex, 1);
-    }
+    selectNewCards(this);
   }
 }
 
@@ -172,15 +211,6 @@ export class GameState {
     this.prompt = prompts[Math.round(Math.random() * (prompts.length - 1))];
     this.promptHistory.push(this.prompt)
   }
-
-  shuffleArray(array: any) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-}
 
   getRestrictedState(username: string) {
     const restrictedState: GameState = JSON.parse(JSON.stringify(this));
@@ -218,12 +248,7 @@ export class GameState {
       chair.selected = false;
       chair.submitted = false;
       chair.cardsSubmitted = [];
-      const cardsAvailable = cardWords.filter(cardWord => (chair.cards?.filter(card => card.text === cardWord).length || 0) === 0);
-      for(let i = 0; i < numberOfCards - (chair.cards?.length || 0); i++){
-        const cardIndex = Math.round(Math.random() * (cardsAvailable.length - 1));
-        chair.cards?.push(new Card(cardsAvailable[cardIndex]));
-        cardsAvailable.splice(cardIndex, 1);
-      }
+      selectNewCards(chair);
     })
   }
 
@@ -250,7 +275,7 @@ export class GameState {
         this.answersSubmitted.push(new Answer(chairIndex, chair.cardsSubmitted, chair.selected))
       }
     })
-    this.shuffleArray(this.answersSubmitted);
+    shuffleArray(this.answersSubmitted);
   }
 }
 
