@@ -115,11 +115,24 @@ export default function Game() {
 
   const place = (cardIndex: number, x: number, y: number) => {
     const updatedCardsSelected = {...cardsSelected};
+    const zSortedKeys = Object.keys(updatedCardsSelected).sort((cardIndexA: any, cardIndexB: any) => {
+      if(cardIndexA === cardIndex) return 1;
+      if(cardIndexB === cardIndex) return -1;
+      let zA = updatedCardsSelected[cardIndexA].z;
+      let zB = updatedCardsSelected[cardIndexB].z;
+      if(zA < zB) return -1;
+      if(zA > zB) return 1;
+      return 0;
+    });
+    for(let i = 0; i < zSortedKeys.length; i++){
+      updatedCardsSelected[zSortedKeys[i]].z = i+1;
+    }
     if(!updatedCardsSelected[cardIndex]){
-      updatedCardsSelected[cardIndex] = new Card(currentChair.cards[cardIndex].text, x, y)
+      updatedCardsSelected[cardIndex] = new Card(currentChair.cards[cardIndex].text, x, y, zSortedKeys.length + 1);
     } else {
       updatedCardsSelected[cardIndex].x = x;
       updatedCardsSelected[cardIndex].y = y;
+      updatedCardsSelected[cardIndex].z = zSortedKeys.length;
     }
     setCardsSelected(updatedCardsSelected)
   }
@@ -433,7 +446,7 @@ export default function Game() {
                   {gameState.currentTurn !== currentPlayerOffset && !currentChair.submitted && <>
                     <div className="note-space draft" onDrop={cardDrop} onDragOver={e => e.preventDefault()} onDragEnter={e => e.preventDefault()}>
                       {Object.keys(cardsSelected).map((cardIndex: any) => 
-                        <button className="placed-card card" draggable="true" onTouchStart={cardTouchStart} onTouchMove={cardTouchMove} onTouchEnd={e => cardTouchEnd(e, cardIndex)} onDragStart={(e: any) => cardDragStart(e, cardIndex)} style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`}}>{cardsSelected[cardIndex].text}</button>
+                        <button className="placed-card card" draggable="true" onTouchStart={cardTouchStart} onTouchMove={cardTouchMove} onTouchEnd={e => cardTouchEnd(e, cardIndex)} onDragStart={(e: any) => cardDragStart(e, cardIndex)} style={{transform: `translate(${cardsSelected[cardIndex].x}px, ${cardsSelected[cardIndex].y}px)`, zIndex: cardsSelected[cardIndex].z}}>{cardsSelected[cardIndex].text}</button>
                       )}
                     </div>
                     { <div className="available-cards" onDrop={cardRemove} onDragOver={e => e.preventDefault()} onDragEnter={e => e.preventDefault()}>
@@ -447,7 +460,7 @@ export default function Game() {
                   {gameState.answersSubmitted.map((answer: Answer) => (
                     <a href="#" className={`note-space${answer.selected ? ' selected' : ''}`} onClick={(e) => {e.preventDefault(); select(answer.chairIndex)}}>
                       {answer.cardsSubmitted.map((card: Card) => 
-                        <button className="card placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`}}>{card.text}</button>
+                        <button className="card placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`, zIndex: card.z}}>{card.text}</button>
                       )}
                     </a>
                   ))}

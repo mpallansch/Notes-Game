@@ -181,14 +181,18 @@ export class Card {
   text: string;
   x: number = 0;
   y: number = 0;
+  z: number = 1;
 
-  constructor(text: string, x?: number, y?: number){
+  constructor(text: string, x?: number, y?: number, z?: number){
     this.text = text;
     if(x){
       this.x = x;
     }
     if(y){
       this.y = y;
+    }
+    if(z){
+      this.z = z;
     }
   }
 }
