@@ -426,7 +426,7 @@ io.on('connection', (socket: any) => {
         if (joinError) {
             socket.emit('error', joinError);
         } else {
-            if(playerStatus.connected && socketClients[gameId] && socketClients[gameId][username] && socketClients[gameId][username].disconnect) {
+            if(playerStatus && playerStatus.connected && socketClients[gameId] && socketClients[gameId][username] && socketClients[gameId][username].disconnect) {
                 socketClients[gameId][username].disconnect();
             }
 
