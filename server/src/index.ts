@@ -413,8 +413,6 @@ io.on('connection', (socket: any) => {
         let playerStatus = getPlayerFromGame(gameId, username);
         if (!playerStatus) {
             joinError = isGameUnjoinable(gameId, passphrase);
-        } else if (playerStatus.connected) {
-            joinError = 'Your account is already connected to this game. Please close any connections from other devices before attempting to connect with this device.';
         }
 
         if (!joinError && playersInGame[username] && gameMetas[playersInGame[username]] && playersInGame[username] !== gameId) {
@@ -428,6 +426,10 @@ io.on('connection', (socket: any) => {
         if (joinError) {
             socket.emit('error', joinError);
         } else {
+            if(playerStatus.connected && socketClients[gameId] && socketClients[gameId][username] && socketClients[gameId][username].disconnect) {
+                socketClients[gameId][username].disconnect();
+            }
+
             playerConnected(gameId, username);
 
             socket.gameId = gameId;
