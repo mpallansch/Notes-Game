@@ -9,6 +9,8 @@ export const cardQuantities: any = {
   filler: 15
 }
 
+export const banditColors = ['black','gray','brown','pink','purple','lightblue','lightgreen'];
+
 export const PHASE_SUBMITTING = 0;
 export const PHASE_SELECTING = 1;
 export const ACTION_SUBMIT = 0;
@@ -170,11 +172,21 @@ export class PlayerState {
   ready: boolean = false;
   username: string;
   host: boolean;
+  color: number = 0;
 
-  constructor(username?: string, host?: boolean, connected: boolean = false) {
+  constructor(username?: string, host?: boolean, connected: boolean = false, color?: number) {
     this.username = username || '';
     this.host = host || false;
     this.connected = connected;
+    if(color && color < banditColors.length){
+      this.color = color;
+    }
+  }
+
+  setColor(color?: number){
+    if(color !== undefined && color < banditColors.length){
+      this.color = color;
+    }
   }
 }
 export class Card {

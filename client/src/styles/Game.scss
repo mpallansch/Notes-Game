@@ -66,20 +66,21 @@ $cardSize: 73px;
         vertical-align: top;
         margin-right: 1em;
         height: $canvasHeaderHeight;
-        width: $canvasHeaderHeight;
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: 0 10px;
+        width: calc($canvasHeaderHeight + 1em);
         text-align: center;
 
         .ready-indicator {
+          position: absolute;
           display: inline-block;
           vertical-align: middle;
-          margin-top: 12px;
-          width: $readyIndicatorSize;
-          height: $readyIndicatorSize;
-          border-radius: #{$readyIndicatorSize / 2};
+          top: 5px;
+          width: 15px;
+          height: 15px;
+          border-radius: 12.5px;
           background-color: red;
+          left: 50%;
+          transform: translate(-50%);
+          border: 1px solid black;
   
           &.ready {
             background-color: green;
@@ -96,23 +97,15 @@ $cardSize: 73px;
           margin: auto;
           transform: translate(-50%);
           padding: 4px 7px !important;
+          border: 1px solid black;
         }
 
-        &.light {
-          background-image: url("../assets/images/bandit-light.png");
-
-          .kick-button { 
-            background-color: black;
-            color: white;
-
-            &:hover {
-              background-color: gray;
-            }
-          }
-        }
-
-        &.dark {
-          background-image: url("../assets/images/bandit-dark.png");
+        svg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
         }
 
         &.turn-highlight {
@@ -156,6 +149,30 @@ $cardSize: 73px;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  #color-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow-x: auto;
+    background-color: lightgray;
+    white-space: nowrap;
+
+    .color-picker-instructions {
+      margin-left: .5em;
+      vertical-align: middle;
+    }
+
+    .color-option {
+      display: inline-block;
+      vertical-align: middle;
+      margin: 1em;
+      width: 1em;
+      height: 1em;
+      border: 2px solid black;
+    }
+  }
 
   button {
     color: black;

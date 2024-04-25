@@ -7,7 +7,7 @@ import Sounds from '../services/Sounds';
 import config from '../constants/Config';
 import constants from '../constants/Constants';
 
-import { PlayerState, GameState, Card, Chair, Answer, isActionValid, minPlayers, ACTION_SUBMIT, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING } from '../shared/Shared';
+import { PlayerState, GameState, Card, Chair, Answer, isActionValid, minPlayers, banditColors, ACTION_SUBMIT, ACTION_SELECT, PHASE_SUBMITTING, PHASE_SELECTING } from '../shared/Shared';
 
 import '../styles/Game.scss';
 
@@ -49,42 +49,6 @@ export default function Game() {
   const playerStateRef = useRef();
   playerStateRef.current = playerState;
 
-  const getChairPosition = (currentPlayer: boolean, numChairs: number, index: number) => {
-    let position = 'south';
-    if(!currentPlayer) {
-      if(numChairs >= 5 && index === 1){
-        position = 'south-west';
-      } else if((numChairs === 4 && index === 1) || 
-                (numChairs >= 7 && index === 2)) {
-        position = 'west';
-      } else if((numChairs === 3 && index === 1) || 
-                ((numChairs === 5 || numChairs === 6) && index === 2) || 
-                (numChairs >= 7 && index === 3)) {
-        position = 'north-west';
-      } else if((numChairs === 4 && index === 2) || 
-                (numChairs === 6 && index === 3) || 
-                (numChairs === 8 && index === 4)) {
-        position = 'north';
-      } else if((numChairs === 3 && index === 2) ||
-                (numChairs === 5 && index === 3) ||
-                ((numChairs === 6 || numChairs === 7) && index === 4) ||
-                (numChairs === 8 && index === 5)) {
-        position = 'north-east';
-      } else if((numChairs === 4 && index === 3) ||
-                (numChairs === 7 && index === 5) ||
-                (numChairs === 8 && index === 6)) {
-        position = 'east';
-      } else if((numChairs === 5 && index === 4) ||
-                (numChairs === 6 && index === 5) ||
-                (numChairs === 7 && index === 6) || 
-                (numChairs === 8 && index === 7)) {
-        position = 'south-east';
-      }
-    }
-
-    return position;
-  }
-
   const connectSocket = () => {
     let newSocket = io(`${config.socketRoot}?gameId=${gameId}&passphrase=${passphrase}`, { withCredentials: true });
 
@@ -111,6 +75,10 @@ export default function Game() {
 
   const skip = () => {
     socket.emit('skip');
+  }
+
+  const setColor = (colorIndex: number) => {
+    socket.emit('set-color', colorIndex);
   }
 
   const place = (cardIndex: number, x: number, y: number) => {
@@ -206,6 +174,72 @@ export default function Game() {
         e.target.style.transform = '';
       }
     }
+  }
+
+  const getBanditImage = (color: string) => {
+    const styleParams = {fill: color, stroke: 'black', strokeWidth: 3}
+
+    return (
+      <svg viewBox="0 0 200 181">
+      <defs>
+        <mask id="collar">
+          <rect x="0" y="0" width="100%" height="100%" fill="white" />
+          <path d="
+            M20,125
+            a1 2 -60 0 1 35,10
+            a1 .7 0 0 0 90,0
+            a1 2 60 0 1 35,-10
+          " stroke="black" stroke-width="8" fill="none"/>
+        </mask>
+        <mask id="collar-border">
+          <rect x="0" y="0" width="100%" height="100%" fill="white" />
+          <rect x="0" y="0" width="32" height="100%" fill="black" />
+          <rect x="168" y="0" width="32" height="100%" fill="black" />
+          <path d="
+            M20,125
+            a1 2 -60 0 1 35,10
+            a1 .7 0 0 0 90,0
+            a1 2 60 0 1 35,-10
+          " stroke="black" stroke-width="8" fill="none"/>
+        </mask>
+      </defs>
+      <path d="
+        M45,60 
+        a5 5 0 0 1 0,-15
+        a5 4 0 0 1 110,0
+        a5 5 0 0 1 0,15
+        Z
+      " {...styleParams} />
+      <path d="
+        M60,70 
+        a3 2 0 0 0 25,5
+        Z
+      " {...styleParams} />
+      <path d="
+        M135,70
+        a3 2 0 0 1 -25,5
+        Z
+      " {...styleParams} />
+      <path d="
+        M45,80
+        a4 1 0 0 0 110,0
+        a1 2 0 0 1 -5,25
+        a10 5 40 0 1 15,15
+        a20 30 -30 0 1 0,80
+        L35,201
+        a20 30 30 0 1 0,-80
+        a10 5 -40 0 1 15,-15
+        a1 2 0 0 1 -5,-25
+        Z
+      " {...styleParams} mask="url(#collar)" />
+      <path d="
+        M20,125
+        a1 2 -60 0 1 35,10
+        a1 .7 0 0 0 90,0
+        a1 2 60 0 1 35,-10
+      " stroke="black" stroke-width="13" fill="none" mask="url(#collar-border)" />
+      </svg>
+    )
   }
 
   const restart = () => {
@@ -385,7 +419,8 @@ export default function Game() {
         <div id="player-list">
           {players.map((playerInList: any, playerIndex: number) => (
             <p className={`player${!playerInList.connected ? ' disconnected' : ''}`} key={playerInList.username}>
-              <span className={`bandit${playerIndex % 2 === 0 ? ' light' : ' dark'}${gameState?.chairs[gameState.currentTurn] && gameState?.chairs[gameState.currentTurn].username === playerInList.username ? ' turn-highlight' : ''}${getSelectedClass(playerIndex)}`}>
+              <span className={`bandit${gameState?.chairs[gameState.currentTurn] && gameState?.chairs[gameState.currentTurn].username === playerInList.username ? ' turn-highlight' : ''}${getSelectedClass(playerIndex)}`}>
+                {getBanditImage(banditColors[playerInList.color])}
                 {!gameState?.started  && <span className={`ready-indicator${playerInList.ready ? ' ready' : ''}`}></span>}
                 {playerState.host && !playerInList.host && <button className="kick-button" onClick={() => {socket.emit('kick-request', playerInList.username)}}>Kick</button>}
               </span>
@@ -408,6 +443,14 @@ export default function Game() {
       </div>
 
       <div id="game-canvas-container">
+        {(!gameState || !gameState.started) && 
+          <div id="color-picker">
+            <span className="color-picker-instructions">Pick color:</span>
+            {banditColors.map((banditColor, colorIndex) => (
+              <button className="color-option" style={{backgroundColor: banditColor}} onClick={() => {setColor(colorIndex)}}></button>
+            ))}
+          </div>
+        }
         {(!gameState || !gameState.started) && 
           <div id="lobby-actions">
             {!playerState.ready && <button type="button" onClick={ready}>Ready</button>}

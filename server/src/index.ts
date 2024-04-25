@@ -97,7 +97,7 @@ const playerConnected = (gameId: string, username: string) => {
         let playerState: PlayerState = getPlayerFromGame(gameId, username);
 
         if (!playerState) {
-            gameMeta.playerStates.push(new PlayerState(username, false, true));
+            gameMeta.playerStates.push(new PlayerState(username, false, true, Math.max(...gameMeta.playerStates.map((playerState: any) => playerState.color)) + 1));
 
             if (gameMeta.joinable()) {
                 for (let i = 0; i < gameMetasQueue.length; i++) {
@@ -455,6 +455,12 @@ io.on('connection', (socket: any) => {
                 let authoredMessage = socket.username + ': ' + msg;
                 socket.gameMeta.messages.push(authoredMessage);
                 io.to(socket.gameId).emit('message', authoredMessage);
+            });
+
+            socket.on('set-color', (colorIndex: number) => {
+                socket.playerStatus.setColor(colorIndex);
+
+                io.to(socket.gameId).emit('players', socket.gameMeta.playerStates);
             });
 
             socket.on('set-ready', (status: boolean) => {
