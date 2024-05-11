@@ -1,4 +1,4 @@
-export const roundDelay = 5000;
+export const roundDelay = 10000;
 export const minPlayers = 3;
 export const itemsPerPage = 5;
 export const pointsToWin = 5;

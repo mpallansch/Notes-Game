@@ -246,6 +246,22 @@ $cardSize: 73px;
         left: 0;
       }
 
+      .note-space-container {
+        display: inline-block;
+        position: relative;
+
+        .note-username-label{
+          position: absolute;
+          background-color: black;
+          color: white;
+          bottom: -1em;
+          left: 50%;
+          transform: translate(-50%, 0);
+          padding: 1em;
+          border-radius: 1em;
+        }
+      }
+
       .note-space {
         display: inline-block;
         position: relative;

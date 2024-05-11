@@ -45,6 +45,7 @@ export default function Game() {
   const socket = socketState.socket;
   const playerState: any = players.find((p: any) => p.username === player.username);
   const currentChair = gameState?.chairs[currentPlayerOffset];
+  const isAnswerSelected = gameState?.phase === PHASE_SELECTING && gameState?.answersSubmitted && gameState?.answersSubmitted.filter(answer => answer.selected).length > 0;
 
   const playerStateRef = useRef();
   playerStateRef.current = playerState;
@@ -501,11 +502,14 @@ export default function Game() {
                 </>}
                 {gameState.phase === PHASE_SELECTING && <>
                   {gameState.answersSubmitted.map((answer: Answer) => (
-                    <a href="#" className={`note-space${answer.selected ? ' selected' : ''}`} onClick={(e) => {e.preventDefault(); select(answer.chairIndex)}}>
-                      {answer.cardsSubmitted.map((card: Card) => 
-                        <button className="card placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`, zIndex: card.z}}>{card.text}</button>
-                      )}
-                    </a>
+                    <div className="note-space-container">
+                      <a href="#" className={`note-space${answer.selected ? ' selected' : ''}`} onClick={(e) => {e.preventDefault(); select(answer.chairIndex)}}>
+                        {answer.cardsSubmitted.map((card: Card) => 
+                          <button className="card placed-card" style={{transform: `translate(${card.x}px, ${card.y}px)`, zIndex: card.z}}>{card.text}</button>
+                        )}
+                      </a>
+                      {isAnswerSelected && <span className="note-username-label">{gameState.chairs[answer.chairIndex].username}</span>}
+                    </div>
                   ))}
                 </>}
               </div>
