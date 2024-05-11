@@ -95,7 +95,13 @@ const prompts = [
   'Announce last call at a dive bar',
   'Write a business plan for Taco Bell',
   'Disinvite someone to your wedding',
-  'Explain puberty to a class full of pre-teens'
+  'Explain puberty to a class full of pre-teens',
+  'Draft an apology email to your boss after accidentally setting the office on fire',
+  'Craft a text message to your ex, asking for your favorite sweater back',
+  'Write a letter to the aliens arriving on Earth, explaining human behavior',
+  'Create a Craigslist ad selling your soul',
+  'Create a list of requirements for a romantic dinner',
+  'Write the list of ingredients God used to create the current player'
 ];
 
 const cards: any = {
