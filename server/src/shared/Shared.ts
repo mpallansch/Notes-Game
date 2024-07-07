@@ -101,7 +101,7 @@ const prompts = [
   'Write a letter to the aliens arriving on Earth, explaining human behavior',
   'Create a Craigslist ad selling your soul',
   'Create a list of requirements for a romantic dinner',
-  'Write the list of ingredients God used to create the current player'
+  'Write the list of ingredients God used to create the current player',
   'Compose a tweet as if you were an alien visiting Earth for the first time',
   'Craft a message to your future self 10 years from now, warning them about an impending disaster',
   'Draft a press release announcing your candidacy for President',
@@ -109,7 +109,7 @@ const prompts = [
   'Write a diary entry for Batman',
   'Write a diary entry for the current player',
   'Write a note seducing the current player',
-  'Compose a speech you\'d give to convince your parents to let you adopt a pet dragon.'
+  'Compose a speech you\'d give to convince your parents to let you adopt a pet dragon'
 ];
 
 const cards: any = {
