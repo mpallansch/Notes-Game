@@ -18,7 +18,7 @@ export const ACTION_SKIP = 1;
 export const ACTION_SELECT = 2;
 
 const prompts = [
-  'Describe a frightening medical condition',
+  /*'Describe a frightening medical condition',
   'Where\'s the weirdest place you\'ve put your finger?',
   'Make up a new holiday',
   'Share a little known remedy for the common cold',
@@ -79,16 +79,16 @@ const prompts = [
   'What\'s the hardest part about being a ghost?',
   'Explain the importance of foreplay',
   'Briefly summarize American history',
-  'Tell a patient that you\'ve accidentally amputated the wrong limb',
   'Tell your parents that you want to become a stunt person',
-  'Ask your boss for a promotion in exchange for sexual favors',
-  'Offer to apply sunscreen to a rapidly burning stranger on the beach',
   'What\'s the most significant moment in human history',
   'Create a Tinder bio for your grandma',
   'Write a missing cat poster',
   'Write a note to the teller informing them you are robbing the bank',
+  'Explain the process of circumcision',*/
+  'Tell a patient that you\'ve accidentally amputated the wrong limb',
+  'Offer to apply sunscreen to a rapidly burning stranger on the beach',
   'Give someone CPR instructions over the phone',
-  'Explain the process of circumcision',
+  'Ask your boss for a promotion in exchange for sexual favors',
   'Tell your spouse of 20 years that you\'d like to have a threesome',
   'Compliment a stripper on the quality of their performance',
   'Tell a child why they shouldn\'t talk to strangers',
@@ -102,6 +102,14 @@ const prompts = [
   'Create a Craigslist ad selling your soul',
   'Create a list of requirements for a romantic dinner',
   'Write the list of ingredients God used to create the current player'
+  'Compose a tweet as if you were an alien visiting Earth for the first time',
+  'Craft a message to your future self 10 years from now, warning them about an impending disaster',
+  'Draft a press release announcing your candidacy for President',
+  'Write a job application to become a professional ghost hunter',
+  'Write a diary entry for Batman',
+  'Write a diary entry for the current player',
+  'Write a note seducing the current player',
+  'Compose a speech you\'d give to convince your parents to let you adopt a pet dragon.'
 ];
 
 const cards: any = {
