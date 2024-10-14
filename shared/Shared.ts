@@ -197,7 +197,7 @@ const prompts = [
   'What is this month\'s most Googled search by 70-year-old men',
   'Write a flier promoting a new vegan coffee bar',
   'Write a diary entry describing the most appealing part of the male body',
-  'Write a letter to the parents of a private school apologizing for why you had to fire the chemistry teacher'
+  'Write a letter to the parents of a private school apologizing for why you had to fire the chemistry teacher',
   'Threaten a neighbor with a lawsuit over a tree branch that fell on your car',
   'Describe the best Halloween costume you\'ve ever seen',
   'Summarize the Star Wars movies',
@@ -229,7 +229,7 @@ const prompts = [
   'What\'s Easter all about?',
   'Go next door and tell your neighbors their music is too loud',
   'Explain the process of circumcision',
-  'Tell a stranger that they look very nice today'
+  'Tell a stranger that they look very nice today',
   'Write the new Nike tagline',
   'Convince a bank to give you a loan',
   'Ask a friend to go bird watching with you',
