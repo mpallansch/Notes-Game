@@ -14,7 +14,7 @@ import {
 import { pickCardsToSubmit, pickBestAnswer } from "./aiLogic";
 
 const apiRoot: string = 'http://localhost:3001/';
-const socketRoot: string = 'http://localhost:3002/';
+const socketRoot: string = 'http://localhost:3001/';
 let gameName: string;
 let shouldHost: boolean = true;
 

@@ -301,9 +301,9 @@ const db = new sqlite3.Database(path.resolve(__dirname, 'db/death-card.db'), sql
 //     database: 'dbo'
 // });
 
-// Initializes express, session, and socket.io
+// Initializes express, session, and socket.io on a single HTTP server
 const app = express();
-const httpServer = createServer();
+const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
         origin: config.clientUrl,
@@ -636,13 +636,10 @@ app.get('/leave-game', (req: any, res: any) => {
     res.send({ error: false, message: 'Game left successfully.' });
 })
 
-// Initializes express app on the specified port
-const apiServer = app.listen(config.apiPort, () => {
-    console.log(`Example app listening on port ${config.apiPort}`);
+// Listen on single port for API, static files, and Socket.IO
+httpServer.listen(config.apiPort, () => {
+    console.log(`Server listening on port ${config.apiPort} (API + Socket.IO)`);
 });
-
-// Initializes socket.io server
-httpServer.listen(config.ioPort);
 
 // Graceful shutdown on SIGTERM/SIGINT
 function shutdown(signal: string) {
@@ -663,9 +660,7 @@ function shutdown(signal: string) {
     setTimeout(() => {
         clearInterval(countdownInterval);
         httpServer.close(() => {
-            apiServer.close(() => {
-                process.exit(0);
-            });
+            process.exit(0);
         });
     }, delayMs);
 }

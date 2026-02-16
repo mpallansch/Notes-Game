@@ -9,7 +9,7 @@ This document provides a comprehensive plan to prepare the Passing Notes game fo
 | Item | Status | Notes |
 |------|--------|-------|
 | **Kick bug fix** | Done | Fixed `delete socketClients[socket.gameId][socket.username]` → `kickedUser` in `server/src/index.ts` |
-| **Environment-based config** | Done | Server uses `SESSION_SECRET`, `API_PORT`, `IO_PORT`, `CLIENT_URL`, etc. Client uses `REACT_APP_API_ROOT`, `REACT_APP_SOCKET_ROOT`. See `.env.example`. |
+| **Environment-based config** | Done | Server uses `SESSION_SECRET`, `API_PORT`, `CLIENT_URL`, etc. Client uses `REACT_APP_API_ROOT`, `REACT_APP_SOCKET_ROOT`. API, static files, and Socket.IO run on a single port. See `.env.example`. |
 | **Server restart message** | Done | SIGTERM/SIGINT handler emits `server-restarting` to clients with 60s countdown; new connections rejected; graceful shutdown. |
 | **Settings page** | Done | Sound toggle, theme (light/dark), username change, notifications, font size, high contrast. |
 

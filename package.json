@@ -6,10 +6,10 @@
   "scripts": {
     "setup": "cd client && npm install && cd ../server && npm install && cd lib/db && node create",
     "copyshared": "copyfiles shared/Shared.ts client/src && copyfiles shared/Shared.ts server/src && copyfiles shared/Shared.ts ai",
-    "local": "npm run copyshared && concurrently \"cd server && npm run local\" \"cd client && npm start\"",
+    "local": "npm run copyshared && cd client && npm run build && copyfiles -u 1 \"build/**/*\" ../server/src/public && cd ../server && npm run local",
     "dev": "npm run copyshared && cd client && npm run dev && cd ../server && npm run dev",
     "prod": "npm run copyshared && cd client && npm run build && copyfiles -u 1 \"build/**/*\" ../server/src/public && cd ../server && npm run prod",
-    "e2e": "npm run copyshared && cd server && npm run create-database && cd .. && concurrently -k -n server,client,ai \"cd server && npm run local\" \"cd client && npm start\" \"npx wait-on http://localhost:3001 -t 30000 && cd ai && npm run setup && node ../scripts/e2e-ai.js\""
+    "e2e": "npm run copyshared && cd client && npm run build && copyfiles -u 1 \"build/**/*\" ../server/src/public && cd .. && cd server && npm run create-database && cd .. && npx kill-port 3001 && concurrently -k -n server,ai \"cd server && npm run local\" \"npx wait-on http://localhost:3001 -t 30000 && npx open-cli http://localhost:3001 && cd ai && npm run setup && node ../scripts/e2e-ai.js\""
   },
   "author": "mpallansch@adittech.com",
   "license": "ISC",

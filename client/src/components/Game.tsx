@@ -54,7 +54,8 @@ export default function Game() {
   playerStateRef.current = playerState;
 
   const connectSocket = () => {
-    let newSocket = io(`${config.socketRoot}?gameId=${gameId}&passphrase=${passphrase}`, { withCredentials: true });
+    const socketUrl = config.socketRoot || (typeof window !== 'undefined' ? window.location.origin : '');
+    let newSocket = io(`${socketUrl}?gameId=${gameId}&passphrase=${passphrase}`, { withCredentials: true });
 
     setSocketState({initialized: false, socket: newSocket});
   };
