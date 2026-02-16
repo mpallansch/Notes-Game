@@ -1,0 +1,64 @@
+diff --git a/node_modules/resolve-url-loader/lib/engine/postcss.js b/node_modules/resolve-url-loader/lib/engine/postcss.js
+index 87571f1..e36c31d 100644
+--- a/node_modules/resolve-url-loader/lib/engine/postcss.js
++++ b/node_modules/resolve-url-loader/lib/engine/postcss.js
+@@ -30,7 +30,7 @@ function process(sourceFile, sourceContent, params) {
+ 
+   // prepend file protocol to all sources to avoid problems with source map
+   return postcss([
+-    postcss.plugin('postcss-resolve-url', postcssPlugin)
++    createResolveUrlPlugin
+   ])
+     .process(correctedContent, {
+       from: fileProtocol.prepend(sourceFile),
+@@ -48,16 +48,9 @@ function process(sourceFile, sourceContent, params) {
+ 
+   /**
+    * Plugin for postcss that follows SASS transpilation.
++   * Uses PostCSS 8 plugin API (postcss.plugin is deprecated).
+    */
+-  function postcssPlugin() {
+-    return function applyPlugin(styles) {
+-      styles.walkDecls(eachDeclaration);
+-    };
+-
+-    /**
+-     * Process a declaration from the syntax tree.
+-     * @param declaration
+-     */
++  function createResolveUrlPlugin() {
+     function eachDeclaration(declaration) {
+       var prefix,
+           isValid = declaration.value && (declaration.value.indexOf('url') >= 0);
+@@ -66,15 +59,6 @@ function process(sourceFile, sourceContent, params) {
+         declaration.value = params.transformDeclaration(declaration.value, getPathsAtChar);
+       }
+ 
+-      /**
+-       * Create a hash of base path strings.
+-       *
+-       * Position in the declaration is supported by postcss at the position of the url() statement.
+-       *
+-       * @param {number} index Index in the declaration value at which to evaluate
+-       * @throws Error on invalid source map
+-       * @returns {{subString:string, value:string, property:string, selector:string}} Hash of base path strings
+-       */
+       function getPathsAtChar(index) {
+         var subString    = declaration.value.slice(0, index),
+             posSelector  = algerbra.sanitise(declaration.parent.source.start),
+@@ -103,7 +87,15 @@ function process(sourceFile, sourceContent, params) {
+         }
+       }
+     }
++
++    return {
++      postcssPlugin: 'postcss-resolve-url',
++      Once: function(root) {
++        root.walkDecls(eachDeclaration);
++      }
++    };
+   }
++  createResolveUrlPlugin.postcss = true;
+ 
+   /**
+    * Given an apparent position find the directory of the original file.

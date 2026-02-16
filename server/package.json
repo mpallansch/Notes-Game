@@ -6,9 +6,9 @@
   "scripts": {
     "create-database": "cd src/db && ts-node create",
     "clear-games": "cd src/db && ts-node clear-games",
-    "local": "nodemon --watch 'src/**/*.ts' --exec NODE_ENV=local \"ts-node\" src/index.ts",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec NODE_ENV=development \"ts-node\" src/index.ts",
-    "prod": "nodemon --watch 'src/**/*.ts' --exec NODE_ENV=production \"ts-node\" src/index.ts"
+    "local": "nodemon --watch \"src/**/*.ts\" --exec \"cross-env NODE_ENV=local ts-node src/index.ts\"",
+    "dev": "nodemon --watch \"src/**/*.ts\" --exec \"cross-env NODE_ENV=development ts-node src/index.ts\"",
+    "prod": "nodemon --watch \"src/**/*.ts\" --exec \"cross-env NODE_ENV=production ts-node src/index.ts\""
   },
   "author": "mpallansch@adittech.com",
   "license": "ISC",
@@ -16,6 +16,7 @@
     "@types/socket.io": "^2.1.13",
     "body-parser": "^1.19.0",
     "cookie-session": "^2.1.0",
+    "dotenv": "^17.3.1",
     "express": "^4.18.2",
     "multer": "^1.4.2",
     "mysql": "^2.18.1",
@@ -32,6 +33,7 @@
     "@types/node": "^14.14.35",
     "@types/nodemailer": "^6.4.1",
     "@types/sqlite3": "^3.1.8",
+    "cross-env": "^7.0.3",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4"

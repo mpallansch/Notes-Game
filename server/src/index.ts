@@ -269,7 +269,7 @@ const db = new sqlite3.Database(path.resolve(__dirname, 'db/death-card.db'), sql
                  return;
              }
              if(results && results.length > 0){
-                results.forEach(result => {
+                (results as Array<{ GameId: string; JSONData: string }>).forEach(result => {
                     const JSONData = JSON.parse(result.JSONData);
                     if(JSONData.playerStates){
                         JSONData.playerStates.forEach((playerState: any, i: any) => {
@@ -337,6 +337,9 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, authorization");
     res.header("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
 
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204);
+    }
     next();
 });
 app.use((req: any, res: any, next) => {
@@ -533,6 +536,34 @@ app.post('/login', async (req: any, res: any) => {
 app.get('/logout', (req: any, res: any) => {
     req.session = null;
     res.send({ error: false, message: 'Logged out successfully.' });
+});
+
+// Change username (requires not in a game)
+app.post('/change-username', (req: any, res: any) => {
+    const { newUsername } = req.body;
+    const username = req.session.playerInfo.username;
+    const email = req.session.playerInfo.email;
+
+    if (!newUsername || typeof newUsername !== 'string') {
+        return res.send({ error: true, message: 'New username is required.' });
+    }
+    if (!validate('username', newUsername)) {
+        return res.send({ error: true, message: 'Username must be at least 3 characters and can only contain numbers, letters, and these special characters: #?!@$%^&*-' });
+    }
+    if (playersInGame[username]) {
+        return res.send({ error: true, message: 'Leave your current game before changing your username.' });
+    }
+
+    db.get('SELECT 1 FROM Users WHERE UserName = ? COLLATE NOCASE AND UserName != ? COLLATE NOCASE', [newUsername, username], (err: any, row: any) => {
+        if (err) return res.send({ error: true, message: 'Error checking username.' });
+        if (row) return res.send({ error: true, message: 'Username is not available. Please try a different username.' });
+
+        db.run('UPDATE Users SET UserName = ? WHERE EmailAddress = ?', [newUsername, email], (err2: any) => {
+            if (err2) return res.send({ error: true, message: 'Error updating username. Please try again.' });
+            req.session.playerInfo = new PlayerInfo(newUsername, email, '');
+            res.send({ error: false, data: req.session.playerInfo });
+        });
+    });
 });
 
 // Used by the client to see if a game is able to be joined
@@ -929,7 +960,7 @@ setInterval(() => {
             return console.log('Error cleaning up password reset database', err);
         }
 
-        rows.forEach((row: { date: number; email: any; }) => {
+        (rows as Array<{ date: number; email: string }>).forEach((row) => {
             if (Date.now() - row.date > constants.resetExpires) {
                 db.run('DELETE FROM Resets WHERE email = ?', [row.email], (err: any) => {
                     if (err) return console.log('Error removing expired record from password reset database', err);
@@ -938,9 +969,9 @@ setInterval(() => {
         });
     });
 
-    db.all('SELECT email, createdAt FROM VerificationTokens', [], (err, rows: any[]) => {
+    db.all('SELECT email, createdAt FROM VerificationTokens', [], (err, rows) => {
         if (!err && rows) {
-            rows.forEach((row: { createdAt: number; email: string }) => {
+            (rows as Array<{ createdAt: number; email: string }>).forEach((row) => {
                 if (Date.now() - row.createdAt > constants.verificationTokenExpires) {
                     db.run('DELETE FROM VerificationTokens WHERE email = ?', [row.email]);
                 }

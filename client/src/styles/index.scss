@@ -1,3 +1,43 @@
+/* Theme, font size, and contrast - applied via data attributes on html */
+:root,
+[data-theme="light"] {
+  --bg-overlay: rgba(255, 255, 255, 0.3);
+  --text-primary: #1a1a1a;
+  --text-secondary: rgba(0, 0, 0, 0.7);
+  --nav-bg: rgb(116, 86, 77);
+  --nav-text: black;
+  --border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] {
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --text-primary: #e8e8e8;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --nav-bg: rgb(70, 50, 45);
+  --nav-text: #e8e8e8;
+  --border-color: rgba(255, 255, 255, 0.3);
+}
+
+[data-font-size="normal"] {
+  font-size: 16px;
+}
+
+[data-font-size="large"] {
+  font-size: 18px;
+}
+
+[data-font-size="xlarge"] {
+  font-size: 20px;
+}
+
+[data-high-contrast="true"] {
+  --border-color: rgba(0, 0, 0, 0.6);
+  
+  a, button, input[type="submit"] {
+    border: 2px solid black;
+  }
+}
+
 body {
   margin: 0;
   font-family: sans-serif;

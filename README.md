@@ -3,12 +3,10 @@ Notes Game
 How to test
 
 1. Run `npm install` in the root folder, `client` folder, `server` folder, and `ai` folder
-2. Run `npm run create-database` in the `server` folder
-3. Run `npm test` in the root directory
-4. For AI testing: set `SKIP_EMAIL_VERIFICATION=true` in `server/.env`, then run `npm run setup` in the `ai` folder
-5. Run `npm test` in the `ai` folder
-6. Sign into the page at http://localhost:3000 using email foo@test.com and password something123 (after AI setup)
-7. Join game 'test'
+2. Run `npm test` in the root directory
+3. For AI testing: set `SKIP_EMAIL_VERIFICATION=true` in `server/.env`
+4. **End-to-end (recommended):** Run `npm run e2e` from the project root. This starts the server, client, creates the database, registers AI users, and launches 7 bots in game "test". Sign in at http://localhost:3000 with foo@test.com / something123 and join game "test".
+5. **Manual AI testing:** Run `npm run create-database` in the `server` folder, start the server (`npm run local` from project root), run `npm run setup` in the `ai` folder, run `npm test` in the `ai` folder, then sign in at http://localhost:3000 with foo@test.com / something123 and join game "test"
 
 New users: Register on the login page, verify your email via the link sent, then log in with your email and password.
 

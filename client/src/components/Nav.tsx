@@ -14,6 +14,9 @@ export default function Nav({account = true, player}: {account?: boolean, player
             {window.location.hash !== '#/home' && <li>
               <Link to="/home">Home</Link>
             </li>}
+            {window.location.hash !== '#/settings' && <li>
+              <Link to="/settings">Settings</Link>
+            </li>}
             <li>
               <Logout />
             </li>

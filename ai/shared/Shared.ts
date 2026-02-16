@@ -318,9 +318,6 @@ const validationRE: any = {
 };
 
 export function validate (fieldName: string, fieldValue: string) {
-  //TODO re-enforce validation for passwords
-  if(fieldName === 'password') return true;
-
   const re = validationRE[fieldName];
   if(re && fieldValue){
     return re.test(fieldValue.toLowerCase());
@@ -534,6 +531,7 @@ export class GameMeta {
   passphrase: string;
   playerStates: Array<PlayerState> = [];
   inactiveSince: Number = -1;
+  lastActivityAt: number = -1;
   kickedPlayers: Array<string> = [];
   state: GameState = new GameState();
 

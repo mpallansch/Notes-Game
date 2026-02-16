@@ -15,22 +15,32 @@ import Game from './components/Game';
 import Home from './components/Home';
 import Sounds from './services/Sounds';
 import Context from './context';
+import { useSettings } from './context/SettingsContext';
 
 import './styles/App.scss';
 
 export default function App() {
   const [ player, setPlayer ] = useState<any>(undefined);
+  const { settings } = useSettings();
 
   useEffect(() => {
-    window.addEventListener('click', (e: Event) => {
+    document.documentElement.setAttribute('data-theme', settings.theme);
+    document.documentElement.setAttribute('data-font-size', settings.fontSize);
+    document.documentElement.setAttribute('data-high-contrast', settings.highContrast ? 'true' : 'false');
+  }, [settings.theme, settings.fontSize, settings.highContrast]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
       if(!e.target) return;
       const targetEl = e.target as HTMLElement;
 
-      if(targetEl.tagName === 'BUTTON' || (targetEl.tagName === 'INPUT' && targetEl.getAttribute('type') === 'submit')){
+      if((targetEl.tagName === 'BUTTON' || (targetEl.tagName === 'INPUT' && targetEl.getAttribute('type') === 'submit')) && !settings.soundMuted){
         Sounds.tap.play();
       }
-    });
-  }, []);
+    };
+    window.addEventListener('click', handler);
+    return () => window.removeEventListener('click', handler);
+  }, [settings.soundMuted]);
 
   return (
     <div className="App">

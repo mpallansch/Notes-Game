@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 
 import Context from '../context';
+import { useSettings } from '../context/SettingsContext';
 import Sounds from '../services/Sounds';
 import config from '../constants/Config';
 import constants from '../constants/Constants';
@@ -13,6 +14,7 @@ import '../styles/Game.scss';
 
 export default function Game() {
   const { player, setPlayer } = useContext<any>(Context);
+  const { settings } = useSettings();
 
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const [ ignored, forceUpdate] = useState<any>(); 
@@ -48,7 +50,7 @@ export default function Game() {
   const currentChair = gameState?.chairs[currentPlayerOffset];
   const isAnswerSelected = gameState?.phase === PHASE_SELECTING && gameState?.answersSubmitted && gameState?.answersSubmitted.filter(answer => answer.selected).length > 0;
 
-  const playerStateRef = useRef();
+  const playerStateRef = useRef<typeof playerState>(undefined);
   playerStateRef.current = playerState;
 
   const connectSocket = () => {
@@ -370,6 +372,20 @@ export default function Game() {
     }
   /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [socketState, messages]);
+
+  const prevTurnRef = useRef<number>(-1);
+  useEffect(() => {
+    if (!gameState?.started || currentPlayerOffset < 0) return;
+
+    const isMyTurn = gameState.currentTurn === currentPlayerOffset;
+    const justBecameMyTurn = isMyTurn && prevTurnRef.current !== currentPlayerOffset;
+    prevTurnRef.current = gameState.currentTurn;
+
+    if (justBecameMyTurn && settings.notificationsEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
+      const phaseText = gameState.phase === PHASE_SUBMITTING ? 'Submit your cards' : 'Select an answer';
+      new Notification('Passing Notes - Your turn!', { body: phaseText });
+    }
+  }, [gameState?.currentTurn, gameState?.phase, gameState?.started, currentPlayerOffset, settings.notificationsEnabled]);
 
   useEffect(() => {
     if(player && gameState && gameState.started && currentPlayerOffset === -1) {

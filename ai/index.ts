@@ -46,7 +46,8 @@ class AI {
       },
     })
       .then((res: any) => {
-        instance.cookie = res.headers.get('set-cookie') || '';
+        const setCookies = res.headers.getSetCookie?.() || [];
+        instance.cookie = setCookies.map((c: string) => c.split(';')[0].trim()).join('; ');
         return res.json();
       })
       .then((objRes: any) => {

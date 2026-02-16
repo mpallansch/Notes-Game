@@ -10,6 +10,8 @@ This document provides a comprehensive plan to prepare the Passing Notes game fo
 |------|--------|-------|
 | **Kick bug fix** | Done | Fixed `delete socketClients[socket.gameId][socket.username]` → `kickedUser` in `server/src/index.ts` |
 | **Environment-based config** | Done | Server uses `SESSION_SECRET`, `API_PORT`, `IO_PORT`, `CLIENT_URL`, etc. Client uses `REACT_APP_API_ROOT`, `REACT_APP_SOCKET_ROOT`. See `.env.example`. |
+| **Server restart message** | Done | SIGTERM/SIGINT handler emits `server-restarting` to clients with 60s countdown; new connections rejected; graceful shutdown. |
+| **Settings page** | Done | Sound toggle, theme (light/dark), username change, notifications, font size, high contrast. |
 
 ---
 
@@ -77,28 +79,29 @@ This document provides a comprehensive plan to prepare the Passing Notes game fo
 
 ---
 
-### 3. Add Message When Server Restart Is About to Occur
+### 3. Add Message When Server Restart Is About to Occur ✅
 
-**Recommendations:**
-- Use a process signal handler (`SIGTERM`, `SIGINT`) to:
-  1. Set a flag `serverShuttingDown = true`.
-  2. Emit a `server-restarting` event to all connected Socket.io clients with a countdown (e.g., "Server restarting in 60 seconds").
-  3. Stop accepting new connections.
-  4. After the delay, gracefully close sockets and exit.
+**Status:** Implemented. On SIGTERM/SIGINT, the server notifies all connected clients and gracefully shuts down after a 60-second countdown.
+
+**Implementation:**
+- `serverShuttingDown` flag set on shutdown; new socket connections are rejected with an error.
+- `io.emit('server-restarting', { secondsRemaining })` sent to all clients immediately and every 10 seconds during countdown.
+- `shutdownDelayMs` (60 seconds) in `Constants.ts`; after delay, `httpServer` and `apiServer` close, then `process.exit(0)`.
+- Client (`Game.tsx`) listens for `server-restarting`, shows a fixed banner with countdown, and decrements every second.
 - Optionally use `pm2` or similar for graceful shutdown in production.
 
 ---
 
-### 4. Add Settings to Settings Page
+### 4. Add Settings to Settings Page ✅
 
-**Current State:** `Settings.tsx` is a placeholder with only a heading.
+**Status:** Implemented. Settings page includes all recommended options.
 
-**Recommendations:**
-- **Nickname/username change** (if you add user accounts).
-- **Sound toggle** (mute/unmute).
-- **Theme** (light/dark) if supported.
-- **Notifications** (browser notifications for turn alerts).
-- **Accessibility** (font size, contrast).
+**Implementation:**
+- **Sound toggle:** Mute/unmute button tap and other sound effects; persisted in localStorage.
+- **Theme:** Light/dark toggle; applies overlay and CSS variables to the app.
+- **Username change:** `POST /change-username` endpoint; requires user to leave any active game; validates and updates username in DB and session.
+- **Notifications:** Browser notification permission request; turn alerts when it's the user's turn and the tab is in the background.
+- **Accessibility:** Font size (normal/large/xlarge) and high contrast mode; applied via data attributes on `html`.
 
 ---
 
@@ -272,11 +275,11 @@ client/build
 | P0 | Fix kick bug (line 613) | Low | High | ✅ Done |
 | P0 | Environment-based config (SESSION_SECRET, CORS) | Low | High | ✅ Done |
 | P1 | Inactive game logic (last activity) | Medium | Medium | ✅ Done |
-| P1 | Server restart message | Medium | Medium | Pending |
+| P1 | Server restart message | Medium | Medium | ✅ Done |
 | P1 | Docker setup | Medium | High | Pending |
 | P2 | Captcha for login/register | Medium | High | ✅ Done |
 | P2 | AI logic improvements | High | Medium | ✅ Done |
-| P2 | Settings page | Low | Low | Pending |
+| P2 | Settings page | Low | Low | ✅ Done |
 | P3 | Rate limiting, input validation | Medium | High | Pending |
 | P3 | UX improvements | Medium | Medium | Pending |
 
@@ -292,4 +295,4 @@ client/build
 
 ## Summary
 
-This plan addresses all README TODOs, provides hosting and containerization guidance, and documents completed work. P0 items (kick bug fix, environment-based config) are complete. Next steps: P1 items (inactive game logic, server restart message, Docker setup) and P2 (captcha, AI improvements).
+This plan addresses all README TODOs, provides hosting and containerization guidance, and documents completed work. P0 and P1 items (kick bug fix, environment-based config, inactive game logic, server restart message) are complete, as are P2 captcha and AI improvements. Next steps: P1 Docker setup, P2 Settings page, and P3 items (rate limiting, input validation, UX improvements).

@@ -35,19 +35,13 @@ let auth = {
       });
     });
   },
-  hash: (password: string, salt: string) => {},
+  hash: (password: string, salt: string): { salt: string; hashedpassword: string } => {
+    if (password == null || salt == null) throw new Error('Must Provide Password and salt values');
+    if (typeof password !== 'string' || typeof salt !== 'string') throw new Error('password must be a string and salt must either be a salt string or a number of rounds');
+    return auth.hasher(password, salt);
+  },
   compare: (password: string, hash: any) => {return false;}
 }
-
-auth.hash = (password: string, salt: string) => {
-  if (password == null || salt == null) {
-      throw new Error('Must Provide Password and salt values');
-  }
-  if (typeof password !== 'string' || typeof salt !== 'string') {
-      throw new Error('password must be a string and salt must either be a salt string or a number of rounds');
-  }
-  return auth.hasher(password, salt);
-};
 
 auth.compare = (password: string, hash: any) => {
   if (password == null || hash == null) {
