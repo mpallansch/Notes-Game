@@ -7,6 +7,8 @@ import {
 
 import CheckLogin from './components/CheckLogin';
 import Login from './components/Login';
+import Register from './components/Register';
+import VerifyEmail from './components/VerifyEmail';
 import Reset from './components/Reset';
 import Settings from './components/Settings';
 import Game from './components/Game';
@@ -40,6 +42,8 @@ export default function App() {
             <Route path="/home" element={<Home/>} />
             <Route path="/settings" element={<Settings/>} />
             <Route path="/game/:gameId/:passphrase" element={<Game/>} />
+            <Route path="/register" element={<Register/>} />
+            <Route path="/verify-email/:token" element={<VerifyEmail/>} />
             <Route path="/reset/:email/:token" element={<Reset/>} />
             <Route path="/" element={<Login/>} />
           </Routes>

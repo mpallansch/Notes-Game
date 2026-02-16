@@ -1,17 +1,29 @@
 .page.login {
-  form {
+  form, .verify-email-container {
     background-color: rgb(116,86,77);
     padding: 0 2em 2em 2em;
     border-radius: 10px;
+  }
 
-    label[for="username"]{
+  .verify-email-container {
+    text-align: center;
+  }
+
+  form {
+    label[for="username"],
+    label[for="email"],
+    label[for="password"],
+    label[for="confirm"] {
       display: inline-block;
       width: 100%;
       text-align: left;
       font-size: 22px;
     }
 
-    #username {
+    #username,
+    #email,
+    #password,
+    #confirm {
       display: block;
       width: 100%;
       margin: 1em 0;
@@ -29,6 +41,43 @@
       display: inline-block;
       margin: 2em 0 .5em 0;
       font-size: 20px;
+    }
+
+    .form-footer {
+      margin: 1.5em 0 0.5em 0;
+      font-size: 18px;
+
+      a {
+        color: #ffd700;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .success-message {
+    margin-top: 1em;
+    padding: 1em;
+    background-color: rgba(0, 128, 0, 0.3);
+    border-radius: 8px;
+
+    p {
+      margin: 0.5em 0;
+    }
+
+    a {
+      color: #ffd700;
+      text-decoration: underline;
+    }
+  }
+
+  .error-message {
+    margin-top: 1em;
+    padding: 1em;
+    background-color: rgba(180, 0, 0, 0.3);
+    border-radius: 8px;
+
+    p {
+      margin: 0.5em 0;
     }
   }
 }

@@ -1,9 +1,17 @@
-import fetch from "node-fetch";
 import { io } from "socket.io-client";
-import { ACTION_PICK_TURN } from "./shared/Shared.js";
 
-// @ts-ignore
-import { PlayerState, GameState, PHASE_SELECTING, PHASE_BIDDING, PHASE_REVEALING, ACTION_SELECT, ACTION_BID, ACTION_REVEAL, isActionValid } from "./shared/Shared.ts";
+import {
+  PlayerState,
+  GameState,
+  PHASE_SUBMITTING,
+  PHASE_SELECTING,
+  ACTION_SUBMIT,
+  ACTION_SKIP,
+  ACTION_SELECT,
+  isActionValid,
+} from "./shared/Shared";
+
+import { pickCardsToSubmit, pickBestAnswer } from "./aiLogic";
 
 const apiRoot: string = 'http://localhost:3001/';
 const socketRoot: string = 'http://localhost:3002/';
@@ -11,237 +19,233 @@ let gameName: string;
 let shouldHost: boolean = true;
 
 class AI {
-    host: boolean = false;
-    username: string = '';
-    cookie: string = '';
-    socket: any = undefined;
-    chairIndex: number = -1;
-    error: any;
+  host: boolean = false;
+  username: string = '';
+  cookie: string = '';
+  socket: any = undefined;
+  chairIndex: number = -1;
+  error: any;
 
-    constructor(index: number, callback: { (): void; (): void; }, error: any) {
-        this.error = error;
-        this.host = index === 0;
+  constructor(index: number, callback: () => void, error: () => void) {
+    this.error = error;
+    this.host = index === 0;
 
-        const instance = this;
-        const formData = {
-            'email': `foo${index + 2}@test.com`,
-            'password': 'something123'
-        };
+    // Emails match setup.ts: foo@test.com, foo2@test.com, ... for indices 0, 1, 2, ...
+    const email = index === 0 ? 'foo@test.com' : `foo${index + 1}@test.com`;
+    const password = 'something123';
 
-        fetch( apiRoot + 'login', {
+    const instance = this;
+    const formData = { email, password };
+
+    fetch(apiRoot + 'login', {
+      method: 'POST',
+      body: JSON.stringify(formData),
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((res: any) => {
+        instance.cookie = res.headers.get('set-cookie') || '';
+        return res.json();
+      })
+      .then((objRes: any) => {
+        if (objRes.error) {
+          console.log('Login error:', objRes.message);
+          return;
+        }
+        instance.username = objRes.data.username;
+
+        if (instance.host && shouldHost) {
+          const formGameData = {
+            gameId: gameName,
+            public: 'true',
+          };
+
+          fetch(apiRoot + 'create-game', {
             method: 'POST',
-            body: JSON.stringify(formData),
+            body: JSON.stringify(formGameData),
             headers: {
-                'Content-Type': 'application/json'
+              cookie: instance.cookie,
+              'Content-Type': 'application/json',
+            },
+          })
+            .then((res: any) => res.json())
+            .then((res: any) => {
+              if (!res.error || res.message === 'Game with that id already exists.') {
+                callback();
+              } else {
+                console.log(res.message);
+              }
+            });
+        } else {
+          callback();
+        }
+      })
+      .catch(() => {
+        console.log('Error during login');
+      });
+  }
+
+  join() {
+    const instance = this;
+    const passphrase = 'public';
+    this.socket = io(`${socketRoot}?gameId=${gameName}&passphrase=${passphrase}`, {
+      withCredentials: true,
+      transportOptions: {
+        polling: {
+          extraHeaders: {
+            Cookie: this.cookie,
+          },
+        },
+      },
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('socket disconnected');
+    });
+
+    this.socket.on('connect', () => {
+      if (this.host && shouldHost) {
+        this.socket.on('players', (players: PlayerState[]) => {
+          if (players.length === numPlayers) {
+            const allReady = players.every((p) => p.ready);
+            if (allReady) {
+              instance.socket.emit('begin-request');
             }
-        } )
-        .then( ( res: any ) => {
-            instance.cookie = res.headers.get('set-cookie')!;  // Non-NULL assertion
-            res.json().then((objRes: any) => {
-                instance.username = objRes.data.username;
-
-                if(instance.host && shouldHost){
-
-                    const formGameData = {
-                        'gameId': gameName,
-                        'public': 'true'
-                    };
-    
-                    fetch(apiRoot + 'create-game', {
-                        method: 'POST',
-                        body: JSON.stringify(formGameData),
-                        headers: {
-                            cookie: instance.cookie,
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then( ( res: any ) => res.json())
-                    .then( ( res: any) => {
-                        if( !res.error || res.message === 'Game with that id already exists.') {
-                            callback()
-                        } else  {
-                            console.log(res.message);
-                        }
-                    });
-                } else {
-                    callback();
-                }
-            }, () => {
-                console.log('Error parsing JSON response from server');
-            });
-        })
-    }
-
-    join() {
-        const instance = this;
-        this.socket = io(`${socketRoot}?gameId=${gameName}`, { 
-            transportOptions: { 
-                polling: { 
-                    extraHeaders: { 
-                        'Cookie': this.cookie 
-                    } 
-                } 
-            } 
+          }
         });
+      }
 
-        this.socket.on('disconnect', () => {
-            console.log('socket disconnected');
-        });
+      this.socket.emit('set-ready', true);
 
-        this.socket.on('connect', () => {
-            if(this.host && shouldHost) {
-                this.socket.on('players', (players: Array<PlayerState>) => {
-                    if(players.length === numPlayers) {
-                        let allReady = true;
+      this.socket.on('error', (err: any) => {
+        if (err === 'You are not signed in. Please log in and try again.') {
+          this.error();
+        } else {
+          console.log(err);
+        }
+      });
 
-                        players.forEach((player) => {
-                            if(!player.ready){
-                                allReady = false;
-                            }
-                        });
-
-                        if(allReady){
-                            instance.socket.emit('begin-request');
-                        }
-                    }
-                });
+      this.socket.on('state', (state: GameState) => {
+        if (instance.chairIndex === -1) {
+          for (let i = 0; i < state.chairs.length; i++) {
+            if (state.chairs[i].username === instance.username) {
+              instance.chairIndex = i;
+              break;
             }
+          }
+        }
 
-            this.socket.emit('set-ready', true);
+        const actions: { name: string; params: any }[] = [];
 
-            this.socket.on('error', (err: any) => {
-                if(err === 'You are not signed in. Please log in and try again.'){
-                    this.error();
-                } else {  
-                    console.log(err);
-                }
-            });
+        if (!state.winner && !state.delay && state.started && state.currentTurn === instance.chairIndex) {
+          if (state.phase === PHASE_SUBMITTING) {
+            // AI is the judge (current turn) - can skip if no one has submitted yet
+            const anyoneSubmitted = state.chairs.some(
+              (chair: any, idx: number) => idx !== state.currentTurn && chair.submitted
+            );
+            if (!anyoneSubmitted) {
+              if (isActionValid(state, instance.chairIndex, ACTION_SKIP, {})) {
+                actions.push({ name: 'skip', params: {} });
+              }
+            }
+            // If we add skip, we might still want to wait - for now skip is optional
+            // The judge typically waits for others, so we only add skip when no one has submitted
+          } else if (state.phase === PHASE_SELECTING) {
+            // AI is the judge - pick the best answer
+            const chair = state.chairs[instance.chairIndex];
+            if (chair && state.answersSubmitted && state.answersSubmitted.length > 0) {
+              const bestChairIndex = pickBestAnswer(state.answersSubmitted, state.prompt);
+              if (bestChairIndex >= 0 && isActionValid(state, instance.chairIndex, ACTION_SELECT, { chairIndex: bestChairIndex })) {
+                actions.push({ name: 'select', params: { chairIndex: bestChairIndex } });
+              }
+            }
+          }
+        }
 
-            this.socket.on('state', (state: GameState) => {
-                if(instance.chairIndex === -1){
-                    for(let i = 0; i < state.chairs.length; i++){
-                        if(state.chairs[i].username === instance.username){
-                            instance.chairIndex = i;
-                            break;
-                        }
-                    }
-                }
+        // When AI is NOT the judge (submitting phase) - add submit action
+        if (!state.winner && !state.delay && state.started && state.phase === PHASE_SUBMITTING && state.currentTurn !== instance.chairIndex) {
+          const chair = state.chairs[instance.chairIndex];
+          if (chair && chair.cards && !chair.submitted) {
+            const cardsToSubmit = pickCardsToSubmit(chair.cards, state.prompt);
+            if (cardsToSubmit.length > 0 && isActionValid(state, instance.chairIndex, ACTION_SUBMIT, { cardsSubmitted: cardsToSubmit })) {
+              actions.push({ name: 'submit', params: { cardsSubmitted: cardsToSubmit } });
+            }
+          }
+        }
 
-                if(!state.winner && !state.delay && state.started && state.currentTurn === instance.chairIndex){
-                    let potentialActions: any = [];
-
-                    if(state.phase === PHASE_SELECTING){
-                        for(let i = 0; i < state.chairs[instance.chairIndex].cards.length; i++){
-                            if(isActionValid(state, instance.chairIndex, ACTION_SELECT, {cardIndex: i})) {
-                                potentialActions.push({name: 'select', params: {cardIndex: i}});
-                            }
-                        }
-
-                        if(state.totalTurns >= state.chairs.length){
-                            for(let i = (state.bid + 1); i < state.numSelected; i++){
-                                if(isActionValid(state, instance.chairIndex, ACTION_BID, {value: i})) {
-                                    potentialActions.push({name: 'bid', params: {value: i}});
-                                }
-                            }
-
-                            if(isActionValid(state, instance.chairIndex, ACTION_BID, {value: 'pass'})) {
-                                potentialActions.push({name: 'bid', params: {value: 'pass'}});
-                            }
-                        }
-                    } else if(state.phase === PHASE_BIDDING) {
-                        for(let i = (state.bid + 1); i < state.numSelected; i++){
-                            if(isActionValid(state, instance.chairIndex, ACTION_BID, {value: i})) {
-                                potentialActions.push({name: 'bid', params: {value: i}});
-                            }
-                        }
-
-                        if(isActionValid(state, instance.chairIndex, ACTION_BID, {value: 'pass'})) {
-                            potentialActions.push({name: 'bid', params: {value: 'pass'}});
-                        }
-                    } else if(state.phase === PHASE_REVEALING) {
-                        for(let i = 0; i < state.chairs.length; i++) {
-                            if(i !== instance.chairIndex) {
-                                if(!state.pickingTurn){
-                                    for(let j = 0; j < state.chairs[i].cards.length; j++){
-                                        if(isActionValid(state, instance.chairIndex, ACTION_REVEAL, {opponentChairIndex: i, cardIndex: j})){
-                                            potentialActions.push({name: 'reveal', params: {opponentChairIndex: i, cardIndex: j}});
-                                        }
-                                    }
-                                } else if(isActionValid(state, instance.chairIndex, ACTION_PICK_TURN, {chairIndex: i})) {
-                                    potentialActions.push({name: 'pick-turn', params: {chairIndex: i}})
-                                }
-                            }
-                        }
-                    }
-
-                    if(potentialActions.length > 0) {
-                        let action = potentialActions[Math.round(Math.random() * (potentialActions.length - 1))];
-                        setTimeout(() => {
-                            instance.socket.emit(action.name, action.params);
-                        }, 500);
-                    } else {
-                        console.log('No valid turns');
-                    }
-                }
-            });
-        });
-    }
+        // Execute the best action (or first available)
+        if (actions.length > 0) {
+          const action = actions[0];
+          setTimeout(() => {
+            instance.socket.emit(action.name, action.params);
+          }, 500 + Math.random() * 500);
+        }
+      });
+    });
+  }
 }
 
-if(process.argv.length < 4) {
-    console.log('Invalid number of parameters. Usage "ts-node index [numPlayers] [numBots] [gameName (optional)] [shouldBotHost (optional)]');
-    process.exit();
+if (process.argv.length < 4) {
+  console.log('Invalid number of parameters. Usage "ts-node index [numPlayers] [numBots] [gameName (optional)] [shouldBotHost (optional)]"');
+  process.exit(1);
 }
 
 const numPlayers = parseInt(process.argv[2]);
 const numBots = parseInt(process.argv[3]);
 
-if(isNaN(numPlayers)){
-    console.log('numPlayers is not a number');
+if (isNaN(numPlayers)) {
+  console.log('numPlayers is not a number');
+  process.exit(1);
 }
 
-if(isNaN(numBots)){
-    console.log('numBots is not a number');
-    process.exit();
+if (isNaN(numBots)) {
+  console.log('numBots is not a number');
+  process.exit(1);
 }
 
-if(process.argv.length >= 5) {
-    gameName = process.argv[4];
+if (process.argv.length >= 5) {
+  gameName = process.argv[4];
 } else {
-    gameName = 'test';
+  gameName = 'test';
 }
 
-if(process.argv.length >= 6 && process.argv[5] === 'false'){
-    shouldHost = false;
+if (process.argv.length >= 6 && process.argv[5] === 'false') {
+  shouldHost = false;
 }
 
 let botsInitialized: number = 0;
-let bots : any[] = [];
+let bots: AI[] = [];
 
 const init = () => {
-    if(bots.length > 0){
-        for(let i = 0; i < numBots; i++) {
-            if(bots[i].socket){
-                bots[i].socket.disconnect();
-            }
-            delete bots[i];
-        }
+  if (bots.length > 0) {
+    for (let i = 0; i < numBots; i++) {
+      if (bots[i]?.socket) {
+        bots[i].socket.disconnect();
+      }
     }
+  }
 
-    botsInitialized = 0;
-    bots = [];
+  botsInitialized = 0;
+  bots = [];
 
-    for(let i = 0; i < numBots; i++) {
-        bots.push(new AI(i, () => {
-            botsInitialized++;
-    
-            if(botsInitialized === numBots){
-                for(let i = 0; i < numBots; i++) {
-                    bots[i].join();
-                }
+  for (let i = 0; i < numBots; i++) {
+    bots.push(
+      new AI(
+        i,
+        () => {
+          botsInitialized++;
+          if (botsInitialized === numBots) {
+            for (let i = 0; i < numBots; i++) {
+              bots[i].join();
             }
-        }, init));
-    }
+          }
+        },
+        init
+      )
+    );
+  }
 };
 
 init();

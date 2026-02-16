@@ -24,7 +24,9 @@ export default function CheckLogin () {
           navigate('/home');
         }
       }, () => {
-        if(location.pathname.indexOf('/reset') !== 0){
+        const isPublicPath = location.pathname === '/' || location.pathname === '/register' ||
+          location.pathname.startsWith('/verify-email') || location.pathname.startsWith('/reset');
+        if (!isPublicPath) {
           navigate('/');
         }
       });

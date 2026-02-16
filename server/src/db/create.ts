@@ -56,7 +56,22 @@ let db = new sqlite3.Database('death-card.db', sqlite3.OPEN_READWRITE | sqlite3.
         UNIQUE (GameId COLLATE NOCASE)
     )`, (err) => {
         if(err){
-            console.log('Error adding table: Users', err);
+            console.log('Error adding table: GameMetas', err);
+        }
+    });
+
+    db.run(`CREATE TABLE IF NOT EXISTS VerificationTokens(
+        email TEXT NOT NULL,
+        username TEXT NOT NULL,
+        password TEXT NOT NULL,
+        salt TEXT NOT NULL,
+        token TEXT NOT NULL,
+        createdAt INTEGER NOT NULL,
+        PRIMARY KEY(email),
+        UNIQUE (email COLLATE NOCASE)
+    )`, (err) => {
+        if(err){
+            console.log('Error adding table: VerificationTokens', err);
         }
     });
 });

@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "NodeJS AI players for the death-card-react project",
   "main": "index.ts",
-  "type": "module",
   "scripts": {
     "test": "nodemon --watch '*.ts' --exec \"ts-node\" index.ts 8 7",
     "setup": "\"ts-node\" setup.ts"

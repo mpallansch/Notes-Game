@@ -12,14 +12,15 @@ import { Server } from 'socket.io';
 import auth from './auth';
 import config from './constants/Config';
 import constants from './constants/Constants';
-import { PlayerInfo, PlayerState, GameMeta, Chair, itemsPerPage, isActionValid, pointsToWin, roundDelay, ACTION_SUBMIT, ACTION_SKIP, ACTION_SELECT, GameState } from './shared/Shared';
+import { sendVerificationEmail } from './email';
+import { PlayerInfo, PlayerState, GameMeta, Chair, itemsPerPage, isActionValid, pointsToWin, roundDelay, ACTION_SUBMIT, ACTION_SKIP, ACTION_SELECT, GameState, validate } from './shared/Shared';
 import e from 'express';
 //import { Connection, MysqlError } from 'mysql';
 
 //let mysql = require('mysql');
 
 // Defines global variables
-const apiWhitelist = ['/login', '/check-login']; //API calls that aren't protected by session authentication
+const apiWhitelist = ['/login', '/check-login', '/register', '/verify-email']; //API calls that aren't protected by session authentication
 let socketClients: any = {};
 let gameMetas: any = {};
 let playersInGame: any = {};
@@ -146,6 +147,7 @@ const addGameMeta = (gameId: string, gameMeta: GameMeta, isPublic: string) => {
         }
 
         gameMetas[gameId] = gameMeta;
+        gameMeta.lastActivityAt = Date.now();
 
         if (isPublic === 'true') {
             gameMetasQueue.push(gameMetas[gameId]);
@@ -195,6 +197,13 @@ const updateSocketChairIndecies = (gameId: string) => {
     }
 }
 
+const recordActivity = (gameId: string) => {
+    const gameMeta = gameMetas[gameId];
+    if (gameMeta) {
+        gameMeta.lastActivityAt = Date.now();
+    }
+};
+
 //Initializes database conntection
 const db = new sqlite3.Database(path.resolve(__dirname, 'db/death-card.db'), sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
@@ -218,7 +227,9 @@ const db = new sqlite3.Database(path.resolve(__dirname, 'db/death-card.db'), sql
                     }
                     JSONData.state = Object.assign(new GameState(), JSONData.state);
                     const gameMetaData = Object.assign(new GameMeta(), JSONData);
-                    
+                    if (gameMetaData.lastActivityAt < 0) {
+                        gameMetaData.lastActivityAt = Date.now();
+                    }
                     gameMetas[result.GameId] = gameMetaData;
                     if(gameMetaData.public && !gameMetaData.state.started){
                         gameMetasQueue.push(gameMetaData);
@@ -309,9 +320,111 @@ app.get('/delete-player-in-game', (req: any, res: any) => {
     delete playersInGame[req.query.username];
 });
 
+// Register new user - creates pending verification, sends email
+app.post('/register', (req: any, res: any) => {
+    const { email, username, password } = req.body;
+    if (!email || !username || !password) {
+        return res.send({ error: true, message: 'Email, username, and password are required.' });
+    }
+    if (!validate('email', email)) {
+        return res.send({ error: true, message: 'Please enter a valid email address.' });
+    }
+    if (!validate('username', username)) {
+        return res.send({ error: true, message: 'Username must be at least 3 characters and can only contain numbers, letters, and these special characters: #?!@$%^&*-' });
+    }
+    if (!validate('password', password)) {
+        return res.send({ error: true, message: 'Password must be at least 12 characters and contain at least one letter and one number.' });
+    }
+
+    db.get('SELECT 1 FROM Users WHERE EmailAddress = ? COLLATE NOCASE', [email], (err: any, row: any) => {
+        if (err) return res.send({ error: true, message: 'Error checking email.' });
+        if (row) return res.send({ error: true, message: 'This email is already registered. Please log in or use a different email.' });
+
+        db.get('SELECT 1 FROM Users WHERE UserName = ? COLLATE NOCASE', [username], (err2: any, row2: any) => {
+            if (err2) return res.send({ error: true, message: 'Error checking username.' });
+            if (row2) return res.send({ error: true, message: 'Username is not available. Please try a different username.' });
+
+            db.get('SELECT 1 FROM VerificationTokens WHERE email = ? COLLATE NOCASE', [email], (err3: any, row3: any) => {
+                if (err3) return res.send({ error: true, message: 'Error. Please try again.' });
+                if (row3 && !process.env.SKIP_EMAIL_VERIFICATION) return res.send({ error: true, message: 'A verification email was already sent to this address. Please check your inbox or try again later.' });
+
+                const salt = auth.generateSalt(10);
+                const hash = auth.hash(password, salt);
+
+                const skipVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
+                if (skipVerification) {
+                    db.run('INSERT INTO Users (EmailAddress, UserName, Password, Salt) VALUES (?, ?, ?, ?)',
+                        [email.toLowerCase(), username, hash.hashedpassword, hash.salt],
+                        (err4: any) => {
+                            if (err4) {
+                                if (err4.message.indexOf('UNIQUE') !== -1) return res.send({ error: true, message: 'Email or username already registered.' });
+                                return res.send({ error: true, message: 'Error creating account. Please try again.' });
+                            }
+                            res.send({ error: false, data: { message: 'Account created successfully!' } });
+                        });
+                    return;
+                }
+
+                auth.generateToken().then((token: string) => {
+                    db.run('INSERT INTO VerificationTokens (email, username, password, salt, token, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+                        [email.toLowerCase(), username, hash.hashedpassword, hash.salt, token, Date.now()],
+                        (err4: any) => {
+                            if (err4) return res.send({ error: true, message: 'Error creating account. Please try again.' });
+                            sendVerificationEmail(email, token).then(() => {
+                                res.send({ error: false, data: { message: 'Registration successful! Please check your email for a verification link to activate your account.' } });
+                            });
+                        });
+                }).catch(() => res.send({ error: true, message: 'Error generating verification token.' }));
+            });
+        });
+    });
+});
+
+// Verify email - called by client when user clicks verification link
+app.post('/verify-email', (req: any, res: any) => {
+    const { token } = req.body;
+    if (!token) return res.send({ error: true, message: 'Invalid verification link.' });
+
+    db.get('SELECT * FROM VerificationTokens WHERE token = ?', [token], (err: any, row: any) => {
+        if (err) return res.send({ error: true, message: 'Error verifying account.' });
+        if (!row) return res.send({ error: true, message: 'Invalid or expired verification link. Please register again.' });
+        if (Date.now() - row.createdAt > constants.verificationTokenExpires) {
+            db.run('DELETE FROM VerificationTokens WHERE email = ?', [row.email]);
+            return res.send({ error: true, message: 'Verification link has expired. Please register again.' });
+        }
+
+        db.run('INSERT INTO Users (EmailAddress, UserName, Password, Salt) VALUES (?, ?, ?, ?)',
+            [row.email, row.username, row.password, row.salt],
+            (err2: any) => {
+                if (err2) {
+                    if (err2.message.indexOf('UNIQUE') !== -1) {
+                        return res.send({ error: true, message: 'This email or username is already registered. Please log in.' });
+                    }
+                    return res.send({ error: true, message: 'Error activating account. Please try again.' });
+                }
+                db.run('DELETE FROM VerificationTokens WHERE email = ?', [row.email]);
+                res.send({ error: false, data: { message: 'Account verified successfully! You can now log in.' } });
+            });
+    });
+});
+
 app.post('/login', (req: any, res: any) => {
-    req.session.playerInfo = new PlayerInfo(req.body.username, 'Guest', playersInGame[req.body.username]);
-    res.send({ error: false, data: req.session.playerInfo });
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.send({ error: true, message: 'Email and password are required.' });
+    }
+
+    db.get('SELECT * FROM Users WHERE EmailAddress = ? COLLATE NOCASE', [email], (err: any, row: any) => {
+        if (err) return res.send({ error: true, message: 'Error accessing account.' });
+        if (!row) return res.send({ error: true, message: 'No account found with this email. Please register first.' });
+
+        const match = auth.compare(password, { salt: row.Salt, hashedpassword: row.Password });
+        if (!match) return res.send({ error: true, message: 'Invalid password.' });
+
+        const username = row.UserName;
+        req.session.playerInfo = new PlayerInfo(username, row.EmailAddress, playersInGame[username]);
+        res.send({ error: false, data: req.session.playerInfo });
+    });
 })
 
 // Used by the client to delete their session
@@ -432,6 +545,7 @@ io.on('connection', (socket: any) => {
             }
 
             playerConnected(gameId, username);
+            recordActivity(gameId);
 
             socket.gameId = gameId;
             socket.gameMeta = gameMeta;
@@ -453,24 +567,28 @@ io.on('connection', (socket: any) => {
             io.to(gameId).emit('players', gameMeta.playerStates);
 
             socket.on('message', (msg: any) => {
+                recordActivity(socket.gameId);
                 let authoredMessage = socket.username + ': ' + msg;
                 socket.gameMeta.messages.push(authoredMessage);
                 io.to(socket.gameId).emit('message', authoredMessage);
             });
 
             socket.on('set-color', (colorIndex: number) => {
+                recordActivity(socket.gameId);
                 socket.playerStatus.setColor(colorIndex);
 
                 io.to(socket.gameId).emit('players', socket.gameMeta.playerStates);
             });
 
             socket.on('set-ready', (status: boolean) => {
+                recordActivity(socket.gameId);
                 socket.playerStatus.ready = status;
 
                 io.to(socket.gameId).emit('players', socket.gameMeta.playerStates);
             });
 
             socket.on('leave', () => {
+                recordActivity(socket.gameId);
                 if (socket.gameMeta && socket.playerStatus) {
                     if (socket.gameMeta.playerStates.length === 1) {
                         removeGameMeta(socket.gameId);
@@ -498,6 +616,7 @@ io.on('connection', (socket: any) => {
             });
 
             socket.on('begin-request', () => {
+                recordActivity(socket.gameId);
                 if (socket.playerStatus && socket.playerStatus.host && socket.gameMeta && !socket.gameMeta.state.started && socket.gameMeta.startable()) {
                     socket.gameMeta.state.started = true;
                     socket.gameMeta.state.actionHistory.push('New game started!');
@@ -511,6 +630,7 @@ io.on('connection', (socket: any) => {
             });
 
             socket.on('submit', (params: any) => {
+                recordActivity(socket.gameId);
                 if (socket.gameMeta && socket.chairIndex !== undefined) {
                     const state = socket.gameMeta.state;
 
@@ -552,6 +672,7 @@ io.on('connection', (socket: any) => {
             });
 
             socket.on('skip', (params: any) => {
+                recordActivity(socket.gameId);
                 if (socket.gameMeta && socket.chairIndex !== undefined) {
                     const state = socket.gameMeta.state;
 
@@ -567,6 +688,7 @@ io.on('connection', (socket: any) => {
             })
 
             socket.on('select', (params: any) => {
+                recordActivity(socket.gameId);
                 if (socket.gameMeta && socket.chairIndex !== undefined) {
                     const state = socket.gameMeta.state;
 
@@ -601,6 +723,7 @@ io.on('connection', (socket: any) => {
             });
 
             socket.on('kick-request', (kickedUser: string) => {
+                recordActivity(socket.gameId);
                 if (socket.playerStatus && socket.playerStatus.host) {
                     socket.gameMeta.kickedPlayers.push(kickedUser);
 
@@ -626,6 +749,7 @@ io.on('connection', (socket: any) => {
             });
 
             socket.on('back-to-lobby', () => {
+                recordActivity(socket.gameId);
                 if (socket.playerStatus && socket.playerStatus.host) {
                     socket.gameMeta.reset();
 
@@ -635,6 +759,7 @@ io.on('connection', (socket: any) => {
             });
 
             socket.on('restart', () => {
+                recordActivity(socket.gameId);
                 if (socket.playerStatus && socket.playerStatus.host) {
                     socket.gameMeta.state.resetGameVariables();
                     socket.gameMeta.state.initialize(socket.gameMeta.playerStates);
@@ -670,33 +795,40 @@ setInterval(() => {
 
         rows.forEach((row: { date: number; email: any; }) => {
             if (Date.now() - row.date > constants.resetExpires) {
-                //db.query('DELETE FROM Resets WHERE EmailAddress = ?', [row.email], (err: any) => {
                 db.run('DELETE FROM Resets WHERE email = ?', [row.email], (err: any) => {
-                    if (err) {
-                        return console.log('Error removing expired record from password reset database', err);
-                    }
+                    if (err) return console.log('Error removing expired record from password reset database', err);
                 });
             }
         });
     });
 
+    db.all('SELECT email, createdAt FROM VerificationTokens', [], (err, rows: any[]) => {
+        if (!err && rows) {
+            rows.forEach((row: { createdAt: number; email: string }) => {
+                if (Date.now() - row.createdAt > constants.verificationTokenExpires) {
+                    db.run('DELETE FROM VerificationTokens WHERE email = ?', [row.email]);
+                }
+            });
+        }
+    });
+
     Object.keys(gameMetas).forEach((gameId: string) => {
-        let inactive = true;
-        gameMetas[gameId].playerStates.forEach((playerState: PlayerState) => {
-            if(playerState.connected){
-                inactive = false;
-            }
-        })
-        if(inactive){
-            if(gameMetas[gameId].inactiveSince > 0){
-                if(Date.now() - gameMetas[gameId].inactiveSince > constants.removeAfter){
+        const gameMeta = gameMetas[gameId];
+        const allDisconnected = gameMeta.playerStates.every((playerState: PlayerState) => !playerState.connected);
+        const noRecentActivity = gameMeta.lastActivityAt > 0 &&
+            (Date.now() - gameMeta.lastActivityAt) > constants.inactiveActionTimeout;
+        const inactive = allDisconnected || noRecentActivity;
+
+        if (inactive) {
+            if (gameMeta.inactiveSince > 0) {
+                if (Date.now() - gameMeta.inactiveSince > constants.removeAfter) {
                     removeGameMeta(gameId);
                 }
             } else {
-                gameMetas[gameId].inactiveSince = Date.now();
+                gameMeta.inactiveSince = Date.now();
             }
         } else {
-            gameMetas[gameId].inactiveSince = -1;
+            gameMeta.inactiveSince = -1;
         }
     });
 }, constants.cleanupInterval);

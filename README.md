@@ -5,10 +5,12 @@ How to test
 1. Run `npm install` in the root folder, `client` folder, `server` folder, and `ai` folder
 2. Run `npm run create-database` in the `server` folder
 3. Run `npm test` in the root directory
-4. Run `npm run setup` in the `ai` folder
+4. For AI testing: set `SKIP_EMAIL_VERIFICATION=true` in `server/.env`, then run `npm run setup` in the `ai` folder
 5. Run `npm test` in the `ai` folder
-6. Sign into the page at http://localhost:3000 using credentials foo@test.com   something123
+6. Sign into the page at http://localhost:3000 using email foo@test.com and password something123 (after AI setup)
 7. Join game 'test'
+
+New users: Register on the login page, verify your email via the link sent, then log in with your email and password.
 
 Environment configuration
 
@@ -16,9 +18,9 @@ For local development, defaults work out of the box. For production, copy `.env.
 
 Notes SPECIFIC TODO
 
-1. Improve AI logic (not have just random moves)
+1. ~~Improve AI logic (not have just random moves)~~ ✅ Done
 2. ~~Handle kick request mid-game~~ ✅ Done
-3. Change inactive game logic to include no recent actions on sockets
+3. ~~Change inactive game logic to include no recent actions on sockets~~ ✅ Done
 
 GENERAL TODO
 
