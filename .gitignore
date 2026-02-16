@@ -3,3 +3,8 @@
 node_modules/
 *.db
 server/src/public
+
+# Environment variables (never commit secrets)
+.env
+.env.local
+.env.*.local

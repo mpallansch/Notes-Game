@@ -10,11 +10,14 @@ How to test
 6. Sign into the page at http://localhost:3000 using credentials foo@test.com   something123
 7. Join game 'test'
 
+Environment configuration
+
+For local development, defaults work out of the box. For production, copy `.env.example` to `.env` in the `server/` folder and set `SESSION_SECRET` (required), `CLIENT_URL`, and optionally `API_PORT`, `IO_PORT`. See `DEPLOYMENT_PLAN.md` for full details.
 
 Notes SPECIFIC TODO
 
 1. Improve AI logic (not have just random moves)
-2. Handle kick request mid-game
+2. ~~Handle kick request mid-game~~ ✅ Done
 3. Change inactive game logic to include no recent actions on sockets
 
 GENERAL TODO

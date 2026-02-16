@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import session from 'cookie-session';
 import bodyParser from 'body-parser';
@@ -610,7 +611,7 @@ io.on('connection', (socket: any) => {
                         setTimeout(() => {
                             if (socketClients[socket.gameId][kickedUser]) {
                                 socketClients[socket.gameId][kickedUser].disconnect();
-                                delete socketClients[socket.gameId][socket.username];
+                                delete socketClients[socket.gameId][kickedUser];
                                 if (Object.keys(socketClients[socket.gameId]).length === 0) {
                                     delete socketClients[socket.gameId];
                                 }
