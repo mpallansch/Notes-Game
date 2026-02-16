@@ -20,11 +20,64 @@ import e from 'express';
 //let mysql = require('mysql');
 
 // Defines global variables
-const apiWhitelist = ['/login', '/check-login', '/register', '/verify-email']; //API calls that aren't protected by session authentication
+const apiWhitelist = ['/login', '/check-login', '/register', '/verify-email', '/login-captcha-required', '/register-captcha-required'];
+let serverShuttingDown = false;
 let socketClients: any = {};
 let gameMetas: any = {};
 let playersInGame: any = {};
 let gameMetasQueue: Array<GameMeta> = [];
+
+// Failed login attempts per IP: { count, firstAttemptAt }
+const failedLoginAttempts: Map<string, { count: number; firstAttemptAt: number }> = new Map();
+const FAILED_ATTEMPTS_THRESHOLD = 5;
+const ATTEMPT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function getClientIp(req: any): string {
+  return req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
+}
+
+function recordFailedLogin(ip: string): void {
+  const now = Date.now();
+  const existing = failedLoginAttempts.get(ip);
+  if (existing) {
+    if (now - existing.firstAttemptAt > ATTEMPT_WINDOW_MS) {
+      failedLoginAttempts.set(ip, { count: 1, firstAttemptAt: now });
+    } else {
+      existing.count++;
+    }
+  } else {
+    failedLoginAttempts.set(ip, { count: 1, firstAttemptAt: now });
+  }
+}
+
+function clearFailedLogin(ip: string): void {
+  failedLoginAttempts.delete(ip);
+}
+
+function requiresCaptcha(ip: string): boolean {
+  const entry = failedLoginAttempts.get(ip);
+  if (!entry) return false;
+  if (Date.now() - entry.firstAttemptAt > ATTEMPT_WINDOW_MS) {
+    failedLoginAttempts.delete(ip);
+    return false;
+  }
+  return entry.count >= FAILED_ATTEMPTS_THRESHOLD;
+}
+
+async function verifyRecaptcha(token: string, remoteip?: string): Promise<boolean> {
+  const params = new URLSearchParams({
+    secret: config.captchaSecretKey!,
+    response: token,
+  });
+  if (remoteip) params.append('remoteip', remoteip);
+
+  const res = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    method: 'POST',
+    body: params,
+  });
+  const data = await res.json();
+  return !!data.success;
+}
 
 // Defines global functions
 const isGameUnjoinable = (id: string, passphrase: string) => {
@@ -321,8 +374,11 @@ app.get('/delete-player-in-game', (req: any, res: any) => {
 });
 
 // Register new user - creates pending verification, sends email
-app.post('/register', (req: any, res: any) => {
-    const { email, username, password } = req.body;
+app.post('/register', async (req: any, res: any) => {
+    const { email, username, password, recaptchaResponse } = req.body;
+    const ip = getClientIp(req);
+    const captchaDisabled = process.env.DISABLE_CAPTCHA === 'true' || process.env.NODE_ENV !== 'production';
+
     if (!email || !username || !password) {
         return res.send({ error: true, message: 'Email, username, and password are required.' });
     }
@@ -334,6 +390,16 @@ app.post('/register', (req: any, res: any) => {
     }
     if (!validate('password', password)) {
         return res.send({ error: true, message: 'Password must be at least 12 characters and contain at least one letter and one number.' });
+    }
+
+    if (!captchaDisabled) {
+        if (!recaptchaResponse) {
+            return res.send({ error: true, message: 'Please complete the captcha to register.' });
+        }
+        const captchaValid = await verifyRecaptcha(recaptchaResponse, ip);
+        if (!captchaValid) {
+            return res.send({ error: true, message: 'Captcha verification failed. Please try again.' });
+        }
     }
 
     db.get('SELECT 1 FROM Users WHERE EmailAddress = ? COLLATE NOCASE', [email], (err: any, row: any) => {
@@ -408,19 +474,55 @@ app.post('/verify-email', (req: any, res: any) => {
     });
 });
 
-app.post('/login', (req: any, res: any) => {
-    const { email, password } = req.body;
+app.get('/login-captcha-required', (req: any, res: any) => {
+    const captchaDisabled = process.env.DISABLE_CAPTCHA === 'true' || process.env.NODE_ENV !== 'production';
+    if (captchaDisabled) {
+        return res.send({ error: false, data: { requiresCaptcha: false } });
+    }
+    const ip = getClientIp(req);
+    res.send({ error: false, data: { requiresCaptcha: requiresCaptcha(ip) } });
+});
+
+app.get('/register-captcha-required', (req: any, res: any) => {
+    const captchaDisabled = process.env.DISABLE_CAPTCHA === 'true' || process.env.NODE_ENV !== 'production';
+    res.send({ error: false, data: { requiresCaptcha: !captchaDisabled } });
+});
+
+app.post('/login', async (req: any, res: any) => {
+    const { email, password, recaptchaResponse } = req.body;
+    const ip = getClientIp(req);
+    const captchaDisabled = process.env.DISABLE_CAPTCHA === 'true' || process.env.NODE_ENV !== 'production';
+
     if (!email || !password) {
         return res.send({ error: true, message: 'Email and password are required.' });
     }
 
+    if (!captchaDisabled && requiresCaptcha(ip)) {
+        if (!recaptchaResponse) {
+            return res.send({ error: true, message: 'Please complete the captcha to continue.', requiresCaptcha: true });
+        }
+        const captchaValid = await verifyRecaptcha(recaptchaResponse, ip);
+        if (!captchaValid) {
+            return res.send({ error: true, message: 'Captcha verification failed. Please try again.', requiresCaptcha: true });
+        }
+    }
+
     db.get('SELECT * FROM Users WHERE EmailAddress = ? COLLATE NOCASE', [email], (err: any, row: any) => {
         if (err) return res.send({ error: true, message: 'Error accessing account.' });
-        if (!row) return res.send({ error: true, message: 'No account found with this email. Please register first.' });
+        if (!row) {
+            recordFailedLogin(ip);
+            const needsCaptcha = !captchaDisabled && requiresCaptcha(ip);
+            return res.send({ error: true, message: 'No account found with this email. Please register first.', requiresCaptcha: needsCaptcha });
+        }
 
         const match = auth.compare(password, { salt: row.Salt, hashedpassword: row.Password });
-        if (!match) return res.send({ error: true, message: 'Invalid password.' });
+        if (!match) {
+            recordFailedLogin(ip);
+            const needsCaptcha = !captchaDisabled && requiresCaptcha(ip);
+            return res.send({ error: true, message: 'Invalid password.', requiresCaptcha: needsCaptcha });
+        }
 
+        clearFailedLogin(ip);
         const username = row.UserName;
         req.session.playerInfo = new PlayerInfo(username, row.EmailAddress, playersInGame[username]);
         res.send({ error: false, data: req.session.playerInfo });
@@ -504,15 +606,49 @@ app.get('/leave-game', (req: any, res: any) => {
 })
 
 // Initializes express app on the specified port
-app.listen(config.apiPort, () => {
+const apiServer = app.listen(config.apiPort, () => {
     console.log(`Example app listening on port ${config.apiPort}`);
 });
 
 // Initializes socket.io server
 httpServer.listen(config.ioPort);
 
+// Graceful shutdown on SIGTERM/SIGINT
+function shutdown(signal: string) {
+    if (serverShuttingDown) return;
+    serverShuttingDown = true;
+    const delayMs = constants.shutdownDelayMs;
+
+    io.emit('server-restarting', { secondsRemaining: Math.ceil(delayMs / 1000) });
+
+    let secondsLeft = Math.ceil(delayMs / 1000);
+    const countdownInterval = setInterval(() => {
+        secondsLeft -= 10;
+        if (secondsLeft > 0) {
+            io.emit('server-restarting', { secondsRemaining: secondsLeft });
+        }
+    }, 10000);
+
+    setTimeout(() => {
+        clearInterval(countdownInterval);
+        httpServer.close(() => {
+            apiServer.close(() => {
+                process.exit(0);
+            });
+        });
+    }, delayMs);
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 // Handles socket connections
 io.on('connection', (socket: any) => {
+    if (serverShuttingDown) {
+        socket.emit('error', 'Server is restarting. Please try again in a moment.');
+        socket.disconnect(true);
+        return;
+    }
+
     let joinError;
 
     let gameId: string = socket.handshake.query.gameId;

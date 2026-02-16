@@ -52,6 +52,16 @@
         text-decoration: underline;
       }
     }
+
+    .captcha-fieldset {
+      margin: 1em 0;
+    }
+
+    .g-recaptcha-container {
+      min-height: 78px;
+      display: flex;
+      justify-content: center;
+    }
   }
 
   .success-message {

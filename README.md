@@ -24,7 +24,7 @@ Notes SPECIFIC TODO
 
 GENERAL TODO
 
-1. Add captcha for login after several incorrect attempts
-2. Add captcha for registering (make able to be disabled on dev, so setup script in ai folder still works)
+1. ~~Add captcha for login after several incorrect attempts~~ ✅ Done
+2. ~~Add captcha for registering (make able to be disabled on dev, so setup script in ai folder still works)~~ ✅ Done
 3. Add message when server restart is about to occur (in progress)
 4. Add settings to settings page

@@ -54,23 +54,26 @@ This document provides a comprehensive plan to prepare the Passing Notes game fo
 
 ## Part 2: General TODO Items
 
-### 1. Add Captcha for Login After Several Incorrect Attempts
+### 1. Add Captcha for Login After Several Incorrect Attempts ✅
 
-**Recommendations:**
-- Track failed login attempts per IP or session (in-memory or Redis). After 3–5 failures, require reCAPTCHA v2/v3.
-- Add `recaptchaResponse` to the login request body when captcha is required.
-- Verify server-side with `captchaSecretKey` (already in Config).
-- Reset attempt count on successful login.
-- **Dev bypass:** Use `process.env.NODE_ENV !== 'production'` or `DISABLE_CAPTCHA=true` to skip captcha in development.
+**Status:** Implemented. After 5 failed login attempts from an IP, reCAPTCHA v2 is required. Captcha is disabled in development (`NODE_ENV !== 'production'`) or when `DISABLE_CAPTCHA=true`.
+
+**Implementation:**
+- Failed attempts tracked per IP (in-memory). After 5 failures within 15 minutes, captcha required.
+- `GET /login-captcha-required` returns whether captcha is needed for the current IP.
+- Login accepts `recaptchaResponse` when captcha is required; verified server-side via Google's siteverify API.
+- Attempt count resets on successful login; window resets after 15 minutes of no attempts.
 
 ---
 
-### 2. Add Captcha for Registering (Disable on Dev for AI Setup)
+### 2. Add Captcha for Registering (Disable on Dev for AI Setup) ✅
 
-**Recommendations:**
-- The current server has no `/register` endpoint in the TypeScript source (only in legacy `lib/index.js`). The game uses nickname-only login.
-- If you add registration later: require reCAPTCHA on the register form, verify server-side, and allow `DISABLE_CAPTCHA=true` or `NODE_ENV=development` so the AI setup script can register without captcha.
-- The AI setup (`ai/setup.ts`) calls `register`—ensure the register endpoint exists and supports a bypass for automated tests.
+**Status:** Implemented. Registration form requires reCAPTCHA v2 when captcha is enabled. Bypassed when `DISABLE_CAPTCHA=true` or `NODE_ENV !== 'production'` so the AI setup script works.
+
+**Implementation:**
+- `GET /register-captcha-required` returns whether captcha is needed for registration.
+- Register endpoint verifies `recaptchaResponse` when captcha is enabled.
+- AI setup continues to work with `SKIP_EMAIL_VERIFICATION` and `DISABLE_CAPTCHA` (or dev mode).
 
 ---
 
@@ -271,7 +274,7 @@ client/build
 | P1 | Inactive game logic (last activity) | Medium | Medium | ✅ Done |
 | P1 | Server restart message | Medium | Medium | Pending |
 | P1 | Docker setup | Medium | High | Pending |
-| P2 | Captcha for login/register | Medium | High | Pending |
+| P2 | Captcha for login/register | Medium | High | ✅ Done |
 | P2 | AI logic improvements | High | Medium | ✅ Done |
 | P2 | Settings page | Low | Low | Pending |
 | P3 | Rate limiting, input validation | Medium | High | Pending |

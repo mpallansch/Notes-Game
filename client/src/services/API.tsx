@@ -10,7 +10,7 @@ export default {
           case 200:
             response.json().then((responseObj: any) => {
               if(responseObj.error){
-                reject(responseObj.message);
+                reject(responseObj.requiresCaptcha ? { message: responseObj.message, requiresCaptcha: true } : responseObj.message);
               } else {
                 resolve(responseObj.data);
               }

@@ -25,6 +25,7 @@ export default function Game() {
   const [ cardsSelected , setCardsSelected ] = useState<any>({});
   const [ startable, setStartable ] = useState<boolean>(false);
   const [ messagesToggle, setMessagesToggle ] = useState<boolean>(true);
+  const [ serverRestarting, setServerRestarting ] = useState<{ secondsRemaining: number } | null>(null);
 
   const { gameId, passphrase } = useParams<{ gameId: string, passphrase: string }>();
   const navigate = useNavigate();
@@ -362,6 +363,10 @@ export default function Game() {
         socketRef.current.socket.disconnect();
         navigateRef.current('/');
       });
+
+      socket.on('server-restarting', (data: { secondsRemaining: number }) => {
+        setServerRestarting({ secondsRemaining: data.secondsRemaining });
+      });
     }
   /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [socketState, messages]);
@@ -395,6 +400,17 @@ export default function Game() {
   }, [messages, messagesToggle]);
 
   useEffect(() => {
+    if (!serverRestarting) return;
+    const interval = setInterval(() => {
+      setServerRestarting(prev => {
+        if (!prev || prev.secondsRemaining <= 1) return null;
+        return { secondsRemaining: prev.secondsRemaining - 1 };
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [!!serverRestarting]);
+
+  useEffect(() => {
     if(!messagesToggle){
       setTimeout(() => {
         let messageEls = document.querySelectorAll('#messages .message');
@@ -411,6 +427,11 @@ export default function Game() {
 
   return (
     <div className="page">
+      {serverRestarting && (
+        <div className="server-restarting-banner">
+          Server restarting in {serverRestarting.secondsRemaining} seconds. Your game will reconnect automatically.
+        </div>
+      )}
       <div id="header">
         <div id="title-container">
           <h1>{gameId}</h1>
